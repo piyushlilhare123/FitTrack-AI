@@ -92,6 +92,24 @@ const authStoreCreator = (set, get) => ({
     set({ user: null, token: null, isAuthenticated: false, error: null });
   },
 
+  deleteAccount: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      await api.delete('/api/auth/me');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('fittrack_token');
+      }
+      set({ user: null, token: null, isAuthenticated: false, error: null });
+      return { success: true };
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Failed to delete account';
+      set({ error: errMsg });
+      return { success: false, error: errMsg };
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   updateUser: async (updateData) => {
     try {
       set({ isLoading: true, error: null });

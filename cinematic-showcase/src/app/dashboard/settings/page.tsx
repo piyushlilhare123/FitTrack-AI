@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export default function Settings() {
-  const { user, updateUser } = useAuthStore() as any;
+  const router = useRouter();
+  const { user, updateUser, deleteAccount } = useAuthStore() as any;
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -74,8 +76,14 @@ export default function Settings() {
     setShowDeleteModal(true);
   };
 
-  const confirmDeleteAccount = () => {
-    toast.error('Account deletion is locked in demo mode!');
+  const confirmDeleteAccount = async () => {
+    const res = await deleteAccount();
+    if (res.success) {
+      toast.success('Your account has been permanently deleted.');
+      router.push('/login');
+    } else {
+      toast.error(res.error || 'Failed to delete account.');
+    }
     setShowDeleteModal(false);
   };
 
