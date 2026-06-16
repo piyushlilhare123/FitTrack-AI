@@ -1,16 +1,27 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface WeeklyDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  colorStr: string;
+  shadowStr: string;
+  dateRange: string;
+  details: { dayName: string; dateStr: string; value: number; label?: string }[];
+  formatValue?: (val: number | string) => string | number;
+}
+
 export default function WeeklyDetailsModal({ 
   isOpen, 
   onClose, 
   title, 
-  colorStr, // e.g. '#39FF14'
-  shadowStr, // e.g. 'rgba(57,255,20,0.25)'
+  colorStr,
+  shadowStr,
   dateRange, 
-  details, // Array of { dayName, dateStr, value, label }
-  formatValue // Optional function to format the value string
-}) {
+  details,
+  formatValue
+}: WeeklyDetailsModalProps) {
   if (!isOpen) return null;
 
   return (

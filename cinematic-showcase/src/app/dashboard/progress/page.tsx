@@ -434,7 +434,7 @@ export default function Progress() {
         shadowStr="rgba(249,115,22,0.25)"
         dateRange={`${startDateStr} — ${endDateStr}`}
         details={getWeeklyBreakdownDetails('burned')}
-        formatValue={(val) => `${val} kcal`}
+        formatValue={(val: number | string) => `${val} kcal`}
       />
 
       <WeeklyDetailsModal
@@ -445,7 +445,7 @@ export default function Progress() {
         shadowStr="rgba(34,197,94,0.25)"
         dateRange={`${startDateStr} — ${endDateStr}`}
         details={getWeeklyBreakdownDetails('consumed')}
-        formatValue={(val) => `${val} kcal`}
+        formatValue={(val: number | string) => `${val} kcal`}
       />
 
       <WeeklyDetailsModal
@@ -455,7 +455,7 @@ export default function Progress() {
         colorStr="#3B82F6"
         shadowStr="rgba(59,130,246,0.25)"
         dateRange={`${startDateStr} — ${endDateStr}`}
-        formatValue={(val) => `${val} glasses`}
+        formatValue={(val: number | string) => `${val} glasses`}
         details={getWeeklyBreakdownDetails('water')}
       />
 
