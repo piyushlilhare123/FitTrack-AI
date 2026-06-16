@@ -9,9 +9,9 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
   });
 }
 
-let genAI = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+let nutritionGenAI = null;
+if (process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY) {
+  nutritionGenAI = new GoogleGenerativeAI(process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY);
 }
 
 exports.getAllConversations = async (req, res, next) => {
@@ -91,8 +91,10 @@ exports.sendMessage = async (req, res, next) => {
     // Extract isVoice flag from request to determine which API key to use
     const { isVoice } = req.body;
 
-    // Use environment variable for API key
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // Use dedicated API keys based on text vs speech
+    const geminiKey = isVoice 
+      ? (process.env.GEMINI_VOICE_KEY || process.env.GEMINI_API_KEY)
+      : (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
       
     let reply = '';
     try {
@@ -213,7 +215,7 @@ exports.scanFood = async (req, res, next) => {
       throw new Error('Please provide an imageBase64 string');
     }
 
-    if (!genAI) {
+    if (!nutritionGenAI) {
       res.status(500);
       throw new Error('Gemini API key is missing. Please add GEMINI_API_KEY to your .env file.');
     }
@@ -237,7 +239,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for a single serving. Return raw JSON only.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
     const imageParts = [
       {
         inlineData: {
@@ -296,7 +298,7 @@ exports.searchFoodText = async (req, res, next) => {
       throw new Error('Please provide food text to search');
     }
 
-    if (!genAI) {
+    if (!nutritionGenAI) {
       res.status(500);
       throw new Error('Gemini API key is missing. Please add GEMINI_API_KEY to your .env file.');
     }
@@ -321,7 +323,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for the described serving. Return raw JSON only.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     let textResponse = '{}';
     try {

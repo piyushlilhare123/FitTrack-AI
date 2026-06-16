@@ -4,8 +4,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini only if valid key exists
 let genAI = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+if (process.env.GEMINI_WORKOUT_KEY || process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_WORKOUT_KEY || process.env.GEMINI_API_KEY);
 }
 
 // Log a completed workout
