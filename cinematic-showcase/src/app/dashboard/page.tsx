@@ -934,7 +934,7 @@ export default function Dashboard() {
                   {getNextUnlockRequirement(activeStreak) && (
                     <div className="pt-2 border-t border-white/5 flex items-center gap-1.5 text-[9px] text-cyan font-bold">
                       <span>🔒</span>
-                      <span>Next: {getNextUnlockRequirement(activeStreak).nextGoal}d Goal requires {getNextUnlockRequirement(activeStreak).requires}d streak (Current: {activeStreak}d)</span>
+                      <span>Next: {getNextUnlockRequirement(activeStreak)?.nextGoal}d Goal requires {getNextUnlockRequirement(activeStreak)?.requires}d streak (Current: {activeStreak}d)</span>
                     </div>
                   )}
                 </div>
