@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: {
-    appIsrStatus: false,
-    buildActivity: false,
-  },
+  // Removed devIndicators as it causes TypeScript errors in Next 16+ during production build
   async rewrites() {
     return [
       {
