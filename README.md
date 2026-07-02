@@ -95,61 +95,8 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 ---
 
 ## 🚀 Getting Started
+ live link of website :- https://fit-track-ai-three.vercel.app/
 
-### 📋 Prerequisites
-* [Node.js](https://nodejs.org/) (v18.0.0 or higher)
-* [MongoDB](https://www.mongodb.com/) (Local Community Server or Atlas account)
-
----
-
-### 🔧 Installation & Setup
-
-#### 1. Setup the Backend Server
-Navigate to the server directory and install dependencies:
-```bash
-cd server
-npm install
-```
-
-Create a `.env` file inside the `server/` directory and configure the variables:
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-
-# Gemini AI Credentials
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_VOICE_KEY=your_voice_specific_api_key
-GEMINI_TEXT_KEY=your_text_specific_api_key
-GEMINI_NUTRITION_KEY=your_vision_specific_api_key
-
-# OpenAI Fallback API Credentials (Optional)
-OPENAI_API_KEY=your_openai_api_key
-```
-
-Run the development server:
-```bash
-npm run dev
-```
-*Note: If the MongoDB URI fails to connect (e.g. IP whitelist block), it will print your current public IP address and automatically launch an in-memory database fallback.*
-
----
-
-#### 2. Setup the Frontend Client
-Navigate to the client directory and install dependencies:
-```bash
-cd ../cinematic-showcase
-npm install
-```
-
-Start the Next.js development server:
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view your cinematic dashboard!
-
----
 
 ## ⚡ API Endpoints
 
@@ -177,5 +124,3 @@ Open [http://localhost:3000](http://localhost:3000) to view your cinematic dashb
 
 ---
 
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
