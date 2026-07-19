@@ -73,6 +73,10 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 500,
   },
+  waterTarget: {
+    type: Number,
+    default: 8,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

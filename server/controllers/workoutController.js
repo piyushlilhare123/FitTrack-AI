@@ -68,12 +68,16 @@ exports.generateWorkoutPlan = async (req, res, next) => {
 
     console.log(`Generating workout for user: Goal=${goalStr}, Level=${levelStr}, Time=${timeMinutes}m, Equipment=${equipList}`);
 
+    if (!genAI) {
+      res.status(500);
+      return next(new Error('Gemini API key is missing. Please configure GEMINI_WORKOUT_KEY in your server .env file.'));
+    }
+
     let workoutPlan = null;
 
-    if (genAI) {
-      try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-        const promptText = `You are an expert personal trainer. Generate a highly customized workout session based on user specifications.
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const promptText = `You are an expert personal trainer. Generate a highly customized workout session based on user specifications.
 Create a unique, creative, and inspiring name for the workout session (e.g., "Velocity Shred Pro", "Apex Iron Build", "Kinetic Flow Endurance") that is specific to the goal and different every time. Avoid generic names like "HIIT Workout" or "Workout Session".
 Return ONLY a JSON object matching this structure. No markdown formatting, no backticks, just raw JSON:
 {
@@ -93,19 +97,19 @@ User Specs:
 - Available Time: ${timeMinutes} minutes
 - Fitness Level: ${levelStr}`;
 
-        const result = await model.generateContent(promptText);
-        let textResponse = result.response.text() || '{}';
-        // Clean markdown if Gemini accidentally included it
-        textResponse = textResponse.replace(/```json|```/g, '').trim();
-        workoutPlan = JSON.parse(textResponse);
-      } catch (err) {
-        console.error('Gemini API call failed, running fallback generator:', err.message);
+      const result = await model.generateContent(promptText);
+      let textResponse = result.response.text() || '{}';
+      // Clean markdown if Gemini accidentally included it
+      textResponse = textResponse.replace(/```json|```/g, '').trim();
+      workoutPlan = JSON.parse(textResponse);
+    } catch (err) {
+      console.error('Gemini API call failed:', err.message);
+      if (err.status === 429 || err?.message?.includes('429') || err?.message?.includes('quota')) {
+        res.status(429);
+        return next(new Error("Bhai, our AI trainer is done for today (Daily Limit Reached) or catching its breath! Please wait 1 minute to check, or try again tomorrow. 🏋️‍♂️"));
       }
-    }
-
-    // Fallback Mock Workout Generation if OpenAI not available or failed
-    if (!workoutPlan) {
-      workoutPlan = generateFallbackWorkout(goalStr, levelStr, timeMinutes, equipList);
+      res.status(500);
+      return next(new Error(`Failed to generate workout plan: ${err.message}`));
     }
 
     // Ensure the name contains the minute tagline (e.g. "(X min)")

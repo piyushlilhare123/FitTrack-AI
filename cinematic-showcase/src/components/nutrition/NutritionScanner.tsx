@@ -108,9 +108,9 @@ export default function NutritionScanner() {
       setResult(response.data.nutritionData);
     } catch (err: any) {
       if (err.response?.status === 429) {
-        setError("API Limit Reached: Please wait 60 seconds, or you may have hit the daily Free Tier limit.");
+        setError(err.response?.data?.error || err.response?.data?.message || "API Limit Reached: Please wait 60 seconds, or you may have hit the daily Free Tier limit.");
       } else {
-        setError("Could not analyze the image. Please try a clearer food photo.");
+        setError(err.response?.data?.error || err.response?.data?.message || "Could not analyze the image. Please try a clearer food photo.");
       }
     } finally {
       setLoading(false);

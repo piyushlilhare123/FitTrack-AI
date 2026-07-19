@@ -145,6 +145,7 @@ export const useWorkoutStore = create((set, get) => ({
       const payload = dateString ? { waterGlasses, date: dateString } : { waterGlasses };
       const res = await api.put('/api/nutrition/water', payload);
       set({ todayNutrition: res.data });
+      get().fetchNutritionHistory();
       return { success: true };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Failed to update water' };

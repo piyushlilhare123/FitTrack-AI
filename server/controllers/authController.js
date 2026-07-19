@@ -1,13 +1,11 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize OpenAI only if valid key exists
-let openai = null;
-if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && process.env.OPENAI_API_KEY.length > 20) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+// Initialize Gemini only if valid key exists
+let genAI = null;
+if (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
 }
 
 const generateToken = (id) => {
@@ -64,41 +62,49 @@ const calculateCalorieMetrics = async (user) => {
   if (goal === 'lose_weight') caloriesBurnedGoal += 100;
   else if (goal === 'improve_endurance') caloriesBurnedGoal += 150;
 
-  if (openai) {
+  // Hydration fallback calculation (glasses of 250ml)
+  let waterTarget = Math.round((weight * 0.033) / 0.25);
+  if (fitnessLevel === 'intermediate') waterTarget += 1;
+  else if (fitnessLevel === 'advanced') waterTarget += 2;
+  if (goal === 'lose_weight' || goal === 'improve_endurance') waterTarget += 1;
+
+  if (genAI) {
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo',
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert fitness coach AI. Calculate the user's daily calories consumption limit (caloriesLimit) and daily workout calories burned goal (caloriesBurnedGoal) based on: age, gender, weight (kg), height (cm), goal, and fitnessLevel.
-            Use Mifflin-St Jeor formula for BMR (Male: 10w + 6.25h - 5a + 5, Female: 10w + 6.25h - 5a - 161) and standard activity multipliers (beginner=1.2, intermediate=1.375, advanced=1.55) to compute TDEE, then apply goal offsets (lose_weight=-500, gain_muscle=+300, maintain=0).
-            Return ONLY a JSON object matching this structure:
-            {
-              "caloriesLimit": 2000,
-              "caloriesBurnedGoal": 500
-            }`
-          },
-          {
-            role: 'user',
-            content: `Calculate goals for user: age=${age}, gender=${gender}, weight=${weight}, height=${height}, goal=${goal}, fitnessLevel=${fitnessLevel}`
-          }
-        ],
-        timeout: 4000
-      });
-      const data = JSON.parse(response.choices[0].message.content);
-      if (data.caloriesLimit && data.caloriesBurnedGoal) {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const promptText = `You are an expert fitness coach AI. Calculate the user's daily calories consumption limit (caloriesLimit), daily workout calories burned goal (caloriesBurnedGoal), and daily water intake goal in glasses of 250ml (waterTarget) based on:
+Age: ${age}
+Gender: ${gender}
+Weight: ${weight} kg
+Height: ${height} cm
+Goal: ${goal}
+Fitness Level: ${fitnessLevel}
+
+Guidelines:
+1. Use Mifflin-St Jeor formula for BMR (Male: 10w + 6.25h - 5a + 5, Female: 10w + 6.25h - 5a - 161) and activity multipliers (beginner=1.2, intermediate=1.375, advanced=1.55) to compute TDEE, then apply goal offsets (lose_weight=-500, gain_muscle=+300, maintain=0).
+2. For waterTarget (in 250ml glasses), use standard recommendation: baseline is weight (kg) * 0.033 / 0.25 (glasses). Add extra glasses for activity (intermediate=+1, advanced=+2) and goals like weight loss or endurance (+1).
+3. Return ONLY a JSON object matching this structure. Do not include markdown, backticks, or other text:
+{
+  "caloriesLimit": number,
+  "caloriesBurnedGoal": number,
+  "waterTarget": number
+}`;
+
+      const result = await model.generateContent(promptText);
+      let textResponse = result.response.text() || '{}';
+      textResponse = textResponse.replace(/```json|```/g, '').trim();
+      const data = JSON.parse(textResponse);
+      if (data.caloriesLimit && data.caloriesBurnedGoal && data.waterTarget) {
         return {
           bmr: Math.round(bmr),
           tdee: Math.round(tdee),
           bmi,
           caloriesLimit: Math.round(Number(data.caloriesLimit)),
-          caloriesBurnedGoal: Math.round(Number(data.caloriesBurnedGoal))
+          caloriesBurnedGoal: Math.round(Number(data.caloriesBurnedGoal)),
+          waterTarget: Math.round(Number(data.waterTarget))
         };
       }
     } catch (err) {
-      console.error('OpenAI Calorie Calculation failed, using BMR formula fallback:', err.message);
+      console.error('Gemini Calorie/Water Calculation failed, using BMR formula fallback:', err.message);
     }
   }
 
@@ -107,7 +113,8 @@ const calculateCalorieMetrics = async (user) => {
     tdee: Math.round(tdee),
     bmi,
     caloriesLimit: Math.round(caloriesLimit),
-    caloriesBurnedGoal: Math.round(caloriesBurnedGoal)
+    caloriesBurnedGoal: Math.round(caloriesBurnedGoal),
+    waterTarget: Math.round(waterTarget)
   };
 };
 
@@ -159,6 +166,7 @@ exports.register = async (req, res, next) => {
       tdee: metrics.tdee,
       caloriesLimit: metrics.caloriesLimit,
       caloriesBurnedGoal: metrics.caloriesBurnedGoal,
+      waterTarget: metrics.waterTarget,
     });
 
     res.status(201).json({
@@ -177,6 +185,7 @@ exports.register = async (req, res, next) => {
       tdee: user.tdee,
       caloriesLimit: user.caloriesLimit,
       caloriesBurnedGoal: user.caloriesBurnedGoal,
+      waterTarget: user.waterTarget,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -258,6 +267,7 @@ exports.updateMe = async (req, res, next) => {
     user.tdee = metrics.tdee;
     user.caloriesLimit = metrics.caloriesLimit;
     user.caloriesBurnedGoal = metrics.caloriesBurnedGoal;
+    user.waterTarget = metrics.waterTarget;
 
     if (req.body.password) {
       user.password = req.body.password;
@@ -282,6 +292,7 @@ exports.updateMe = async (req, res, next) => {
       tdee: updatedUser.tdee,
       caloriesLimit: updatedUser.caloriesLimit,
       caloriesBurnedGoal: updatedUser.caloriesBurnedGoal,
+      waterTarget: updatedUser.waterTarget,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {

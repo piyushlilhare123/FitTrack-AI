@@ -158,8 +158,14 @@ export default function Progress() {
 
   // 2 & 3. Weekly Calories Consumed & Water Intake
   const allNutritionLogs = [...(nutritionHistory || [])];
-  if (todayNutrition && !allNutritionLogs.find(l => new Date(l.date).toDateString() === new Date(todayNutrition.date).toDateString())) {
-    allNutritionLogs.push(todayNutrition);
+  const todayStr = new Date().toDateString();
+  const todayIndex = allNutritionLogs.findIndex(l => new Date(l.date).toDateString() === todayStr);
+  if (todayNutrition) {
+    if (todayIndex > -1) {
+      allNutritionLogs[todayIndex] = todayNutrition;
+    } else {
+      allNutritionLogs.push(todayNutrition);
+    }
   }
 
   const currentWeekNutrition = allNutritionLogs.filter((log: any) => isInCurrentWeek(log.date));
@@ -279,7 +285,7 @@ export default function Progress() {
           </div>
           <h3 className="text-2xl font-mono font-extrabold text-blue-400">{weeklyWaterIntake} <span className="text-[10px] text-mutedText font-sans font-bold uppercase tracking-widest">glasses</span></h3>
           <p className="text-[10px] font-bold text-mutedText font-sans">
-            Goal: {(daysSinceMonday + 1) * 8} glasses so far
+            Goal: {(daysSinceMonday + 1) * (user?.waterTarget || 8)} glasses so far
           </p>
         </Card>
 

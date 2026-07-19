@@ -1,6 +1,7 @@
 const NutritionLog = require('../models/NutritionLog');
 const User = require('../models/User');
 const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 let openai = null;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && process.env.OPENAI_API_KEY.length > 20) {
@@ -8,6 +9,17 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
     apiKey: process.env.OPENAI_API_KEY,
   });
 }
+
+let genAI = null;
+if (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
+}
+
+let nutritionGenAI = null;
+if (process.env.GEMINI_NUTRITION_KEY) {
+  nutritionGenAI = new GoogleGenerativeAI(process.env.GEMINI_NUTRITION_KEY);
+}
+
 
 // Log a meal item
 exports.logMeal = async (req, res, next) => {
@@ -258,6 +270,78 @@ exports.updateWater = async (req, res, next) => {
     }
 
     res.json(log);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.calculateAIWaterTarget = async (req, res, next) => {
+  try {
+    const { weight, workoutTime } = req.body;
+
+    if (!weight || workoutTime === undefined) {
+      res.status(400);
+      return next(new Error('Please provide weight (kg) and daily workout time (minutes)'));
+    }
+
+    if (!nutritionGenAI) {
+      res.status(500);
+      return next(new Error('Nutrition API key is missing. Please configure GEMINI_NUTRITION_KEY in your server .env file.'));
+    }
+
+    const weightVal = Number(weight);
+    const workoutTimeVal = Number(workoutTime);
+
+    // Dynamic prompt for Gemini
+    const promptText = `You are a professional dietitian. Estimate the optimal daily water intake in standard glasses of 250ml for an individual based on the following specifications:
+- Weight: ${weightVal} kg
+- Daily Workout Duration: ${workoutTimeVal} minutes
+
+Guidelines:
+1. Baseline water intake is approximately 35ml per kg of body weight.
+2. Add about 250ml to 500ml (1 to 2 glasses) for every 30 minutes of daily intense workout/sweating.
+3. Convert the total volume into standard 250ml glasses (rounded to the nearest integer, usually between 8 and 16 glasses).
+4. Provide a brief, supportive 1-2 sentence explanation of why this target is recommended for their weight and workout routine.
+
+Return ONLY a JSON object matching this structure. Do not include markdown, backticks, or other text:
+{
+  "waterGlasses": number,
+  "explanation": string
+}`;
+
+    let resultData = null;
+    try {
+      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const result = await model.generateContent(promptText);
+      let textResponse = result.response.text() || '{}';
+      textResponse = textResponse.replace(/```json|```/g, '').trim();
+      resultData = JSON.parse(textResponse);
+    } catch (apiError) {
+      console.error("Gemini API Error in calculateAIWaterTarget:", apiError);
+      if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
+        res.status(429);
+        return next(new Error("Bhai, our AI nutrition search is taking a break! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 💧"));
+      }
+      res.status(500);
+      return next(new Error(`Failed to calculate hydration plan: ${apiError.message}`));
+    }
+
+    if (resultData && resultData.waterGlasses) {
+      // Save it directly on the User model
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.waterTarget = Number(resultData.waterGlasses);
+        await user.save();
+      }
+
+      res.json({
+        success: true,
+        waterGlasses: Number(resultData.waterGlasses),
+        explanation: resultData.explanation
+      });
+    } else {
+      throw new Error('Invalid response from AI');
+    }
   } catch (error) {
     next(error);
   }

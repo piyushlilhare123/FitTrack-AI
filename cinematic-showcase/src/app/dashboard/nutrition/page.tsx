@@ -23,7 +23,7 @@ import {
 import toast from 'react-hot-toast';
 
 export default function Nutrition() {
-  const { user } = useAuthStore() as any;
+  const { user, checkAuth } = useAuthStore() as any;
   const { 
     todayNutrition, 
     nutritionHistory,
@@ -47,6 +47,19 @@ export default function Nutrition() {
 
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+  
+  // AI Hydration Calculator states
+  const [isHydrationAIExpanded, setIsHydrationAIExpanded] = useState(false);
+  const [hydrationWeight, setHydrationWeight] = useState(user?.weight?.toString() || '');
+  const [hydrationWorkoutTime, setHydrationWorkoutTime] = useState('30');
+  const [isCalculatingAIWater, setIsCalculatingAIWater] = useState(false);
+  const [hydrationAIResult, setHydrationAIResult] = useState<{ waterGlasses: number, explanation: string } | null>(null);
+
+  useEffect(() => {
+    if (user?.weight) {
+      setHydrationWeight(user.weight.toString());
+    }
+  }, [user]);
   
   const toggleExpandHistory = (id: string) => {
     setExpandedHistoryId(prev => prev === id ? null : id);
@@ -194,6 +207,45 @@ export default function Nutrition() {
         setIsFromSearch(true);
         setIsAddModalOpen(true);
       }
+    }
+  };
+
+  const handleCalculateAIWater = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hydrationWeight || !hydrationWorkoutTime) return;
+
+    setIsCalculatingAIWater(true);
+    toast.loading('AI calculating hydration metrics...', { id: 'water-ai' });
+
+    try {
+      const token = localStorage.getItem('fittrack_token');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_URL}/api/nutrition/calculate-water`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          weight: Number(hydrationWeight),
+          workoutTime: Number(hydrationWorkoutTime)
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHydrationAIResult(data);
+        toast.success(`Hydration target updated to ${data.waterGlasses} glasses!`, { id: 'water-ai' });
+        // Refresh user details (to update waterTarget goals)
+        await checkAuth();
+      } else {
+        throw new Error(data.error || data.message || 'Failed to calculate');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'AI calculation failed.', { id: 'water-ai' });
+    } finally {
+      setIsCalculatingAIWater(false);
     }
   };
 
@@ -398,13 +450,75 @@ export default function Nutrition() {
 
           {/* Hydration Station */}
           <Card className="space-y-4">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><Droplets className="w-4 h-4 text-blue-400" /> Hydration Station</h3>
-              <p className="text-[9px] text-mutedText mt-0.5">Track your daily water intake (Goal: 8 glasses)</p>
+            <div className="border-b border-white/5 pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><Droplets className="w-4 h-4 text-blue-400" /> Hydration Station</h3>
+                <p className="text-[9px] text-mutedText mt-0.5">Track your daily water intake (Goal: {user?.waterTarget || 8} glasses)</p>
+              </div>
+              <button 
+                onClick={() => setIsHydrationAIExpanded(!isHydrationAIExpanded)}
+                className="text-[10px] font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-md transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3 animate-pulse" /> AI target
+              </button>
             </div>
+            
+            {isHydrationAIExpanded && (
+              <form onSubmit={handleCalculateAIWater} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <p className="text-[10px] text-mutedText">Analyze your current weight and workout details to determine the optimal hydration target.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[9px] text-mutedText block mb-1">Weight (kg)</label>
+                    <input 
+                      type="number"
+                      required
+                      value={hydrationWeight}
+                      onChange={(e) => setHydrationWeight(e.target.value)}
+                      placeholder="e.g. 70"
+                      className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 text-center font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-mutedText block mb-1">Workout Time (min)</label>
+                    <input 
+                      type="number"
+                      required
+                      value={hydrationWorkoutTime}
+                      onChange={(e) => setHydrationWorkoutTime(e.target.value)}
+                      placeholder="e.g. 45"
+                      className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 text-center font-mono"
+                    />
+                  </div>
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isCalculatingAIWater}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-md py-1.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isCalculatingAIWater ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" /> Calculate Target
+                    </>
+                  )}
+                </button>
+                {hydrationAIResult && (
+                  <div className="pt-2 border-t border-white/5 space-y-1">
+                    <div className="text-[11px] font-bold text-blue-400 flex items-center gap-1">
+                      Recommended: {hydrationAIResult.waterGlasses} glasses!
+                    </div>
+                    <p className="text-[10px] text-mutedText leading-relaxed italic">"{hydrationAIResult.explanation}"</p>
+                  </div>
+                )}
+              </form>
+            )}
+
             <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                {[...Array(8)].map((_, i) => {
+              <div className="flex gap-1 flex-wrap max-w-[200px]">
+                {[...Array(user?.waterTarget || 8)].map((_, i) => {
                   const isFilled = i < (todayNutrition?.waterGlasses || 0);
                   return (
                     <div key={i} className={`w-5 h-8 rounded-b-md rounded-t-sm border ${isFilled ? 'bg-blue-500 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/5 border-white/10'} transition-all duration-300`}></div>
@@ -483,7 +597,7 @@ export default function Nutrition() {
                       <div className="flex items-center gap-4 mt-2 text-[10px] text-mutedText">
                         <span className="font-mono text-cyan">{log.totalCalories} kcal Total</span>
                         <span className="flex items-center gap-1 font-mono text-blue-400">
-                          <Droplets className="w-3 h-3" /> {log.waterGlasses || 0}/8 Glasses
+                          <Droplets className="w-3 h-3" /> {log.waterGlasses || 0}/{user?.waterTarget || 8} Glasses
                         </span>
                       </div>
                     </div>

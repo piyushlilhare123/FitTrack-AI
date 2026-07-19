@@ -98,7 +98,7 @@ exports.sendMessage = async (req, res, next) => {
       
     let reply = '';
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -120,7 +120,7 @@ exports.sendMessage = async (req, res, next) => {
         }
       } else if (response.status === 429) {
         // Handle Google Free Tier Rate Limit gracefully
-        reply = "Whoa bhai, we are talking too fast! Google's free AI has a speed limit of 15 messages per minute. Just wait about 60 seconds and then we can continue our session!";
+        reply = "Whoa bhai, we hit the speed limit (15 messages/min) or daily free limit! Wait 60 seconds to see if it resumes, or let's connect again tomorrow! 🌅";
       } else {
         const errorData = await response.json();
         console.error('Gemini API error:', errorData);
@@ -239,7 +239,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for a single serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const imageParts = [
       {
         inlineData: {
@@ -258,7 +258,7 @@ All gram values should be realistic for a single serving. Return raw JSON only.`
       console.error("Gemini API Error:", apiError);
       if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
         console.log("Rate limit reached in scanFood.");
-        return res.status(429).json({ success: false, error: 'Google Gemini API limit reached. Please wait 1 minute before scanning again.' });
+        return res.status(429).json({ success: false, error: "Bhai, our AI dietician has completed today's rounds! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 🥗" });
       }
       throw apiError;
     }
@@ -323,7 +323,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for the described serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     let textResponse = '{}';
     try {
@@ -334,7 +334,7 @@ All gram values should be realistic for the described serving. Return raw JSON o
       console.error("Gemini API Error:", apiError);
       if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
         console.log("Rate limit reached in searchFoodText.");
-        return res.status(429).json({ success: false, error: 'Google Gemini API limit reached. Please wait 1 minute before searching again.' });
+        return res.status(429).json({ success: false, error: "Bhai, our AI nutrition search is taking a break! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 💧" });
       }
       throw apiError;
     }
