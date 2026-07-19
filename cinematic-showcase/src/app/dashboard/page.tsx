@@ -505,7 +505,7 @@ export default function Dashboard() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6); // Up to Sunday
+    endOfWeek.setDate(startOfWeek.getDate() + 5); // Up to Saturday
     endOfWeek.setHours(23, 59, 59, 999);
     
     const burnedByDate: { [key: string]: number } = {};
@@ -518,13 +518,13 @@ export default function Dashboard() {
       }
     });
 
-    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const details = [];
 
     let totalBudget = 0;
     let totalConsumed = 0;
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 6; i++) {
       const targetDate = new Date(startOfWeek);
       targetDate.setDate(startOfWeek.getDate() + i);
       const dateStr = targetDate.toDateString();
@@ -577,9 +577,9 @@ export default function Dashboard() {
     startOfWeek.setDate(today.getDate() - daysToSubtract);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 6; i++) {
       const targetDate = new Date(startOfWeek);
       targetDate.setDate(startOfWeek.getDate() + i);
       const dateStr = targetDate.toDateString();

@@ -160,7 +160,7 @@ export default function Progress() {
 
   const isInCurrentWeek = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d >= startOfWeek; // Include Sunday as well
+    return d >= startOfWeek && d.getDay() !== 0; // Exclude Sunday
   };
 
   // 1. Weekly Calories Burned (from workouts)
