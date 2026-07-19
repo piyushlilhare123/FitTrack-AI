@@ -311,7 +311,7 @@ Return ONLY a JSON object matching this structure. Do not include markdown, back
 
     let resultData = null;
     try {
-      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-3.5-flash" });
       const result = await model.generateContent(promptText);
       let textResponse = result.response.text() || '{}';
       textResponse = textResponse.replace(/```json|```/g, '').trim();

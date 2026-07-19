@@ -239,7 +239,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for a single serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-3.5-flash" });
     const imageParts = [
       {
         inlineData: {
@@ -323,7 +323,7 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for the described serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     let textResponse = '{}';
     try {
