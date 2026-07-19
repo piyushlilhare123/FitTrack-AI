@@ -33,7 +33,7 @@ const getFullImageUrl = (path: string) => {
 };
 
 export default function Progress() {
-  const { user } = useAuthStore() as any;
+  const { user, updateUser } = useAuthStore() as any;
   const { 
     progressHistory, 
     workouts, 
@@ -50,16 +50,11 @@ export default function Progress() {
   const [weight, setWeight] = useState('');
   const [bodyFat, setBodyFat] = useState('');
   const [note, setNote] = useState('');
-  const [photoUrl, setPhotoUrl] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('progress_afterPhotoUrl') || '';
-    return '';
-  });
-  const [isUploading, setIsUploading] = useState(false);
   
-  const [beforePhotoUrl, setBeforePhotoUrl] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('progress_beforePhotoUrl') || '';
-    return '';
-  });
+  const photoUrl = user?.afterPhotoUrl || '';
+  const beforePhotoUrl = user?.beforePhotoUrl || '';
+  
+  const [isUploading, setIsUploading] = useState(false);
   const [isBeforeUploading, setIsBeforeUploading] = useState(false);
 
   const [showBurnedModal, setShowBurnedModal] = useState(false);
@@ -72,16 +67,6 @@ export default function Progress() {
     fetchNutritionHistory();
     fetchTodayNutrition();
   }, []);
-
-  useEffect(() => {
-    if (photoUrl) localStorage.setItem('progress_afterPhotoUrl', photoUrl);
-    else localStorage.removeItem('progress_afterPhotoUrl');
-  }, [photoUrl]);
-
-  useEffect(() => {
-    if (beforePhotoUrl) localStorage.setItem('progress_beforePhotoUrl', beforePhotoUrl);
-    else localStorage.removeItem('progress_beforePhotoUrl');
-  }, [beforePhotoUrl]);
 
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +102,7 @@ export default function Progress() {
     setIsUploading(false);
 
     if (res.success) {
-      setPhotoUrl(res.photoUrl);
+      await updateUser({ afterPhotoUrl: res.photoUrl });
       toast.success('Photo uploaded successfully!', { id: 'photo' });
     } else {
       toast.error(res.error || 'Photo upload failed.', { id: 'photo' });
@@ -138,7 +123,7 @@ export default function Progress() {
     setIsBeforeUploading(false);
 
     if (res.success) {
-      setBeforePhotoUrl(res.photoUrl);
+      await updateUser({ beforePhotoUrl: res.photoUrl });
       toast.success('Before photo uploaded successfully!', { id: 'beforePhoto' });
     } else {
       toast.error(res.error || 'Photo upload failed.', { id: 'beforePhoto' });
@@ -378,7 +363,7 @@ export default function Progress() {
                   <p className="text-xs font-bold text-white uppercase tracking-widest drop-shadow-md">Change Photo</p>
                 </div>
                 <button 
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBeforePhotoUrl(''); }}
+                  onClick={async (e) => { e.preventDefault(); e.stopPropagation(); await updateUser({ beforePhotoUrl: '' }); }}
                   className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white p-1.5 rounded-full z-30 transition-colors"
                   title="Remove Photo"
                 >
@@ -417,7 +402,7 @@ export default function Progress() {
                   <p className="text-xs font-bold text-white uppercase tracking-widest drop-shadow-md">Change Photo</p>
                 </div>
                 <button 
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPhotoUrl(''); }}
+                  onClick={async (e) => { e.preventDefault(); e.stopPropagation(); await updateUser({ afterPhotoUrl: '' }); }}
                   className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white p-1.5 rounded-full z-30 transition-colors"
                   title="Remove Photo"
                 >

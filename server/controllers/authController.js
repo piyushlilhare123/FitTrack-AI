@@ -259,6 +259,8 @@ exports.updateMe = async (req, res, next) => {
     user.gender = req.body.gender || user.gender;
     user.avatar = req.body.avatar || user.avatar;
     user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+    user.beforePhotoUrl = req.body.beforePhotoUrl !== undefined ? req.body.beforePhotoUrl : user.beforePhotoUrl;
+    user.afterPhotoUrl = req.body.afterPhotoUrl !== undefined ? req.body.afterPhotoUrl : user.afterPhotoUrl;
 
     // Recalculate calorie metrics dynamically
     const metrics = await calculateCalorieMetrics(user);
@@ -293,6 +295,8 @@ exports.updateMe = async (req, res, next) => {
       caloriesLimit: updatedUser.caloriesLimit,
       caloriesBurnedGoal: updatedUser.caloriesBurnedGoal,
       waterTarget: updatedUser.waterTarget,
+      beforePhotoUrl: updatedUser.beforePhotoUrl,
+      afterPhotoUrl: updatedUser.afterPhotoUrl,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {

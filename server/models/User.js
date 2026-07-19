@@ -77,6 +77,14 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 8,
   },
+  beforePhotoUrl: {
+    type: String,
+    default: '',
+  },
+  afterPhotoUrl: {
+    type: String,
+    default: '',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

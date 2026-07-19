@@ -40,14 +40,6 @@ exports.logWorkout = async (req, res, next) => {
 // Get workout history for logged-in user
 exports.getWorkoutHistory = async (req, res, next) => {
   try {
-    // Automatically delete workouts older than 7 days (1 week)
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    await Workout.deleteMany({
-      userId: req.user._id,
-      date: { $lt: oneWeekAgo }
-    });
-
     const workouts = await Workout.find({ userId: req.user._id }).sort({ date: -1 });
     res.json(workouts);
   } catch (error) {
