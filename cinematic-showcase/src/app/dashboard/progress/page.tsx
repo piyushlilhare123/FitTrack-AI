@@ -20,6 +20,18 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const getFullImageUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  
+  const apiURL = process.env.NEXT_PUBLIC_API_URL || 
+    (typeof window !== 'undefined' 
+      ? `http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:5000` 
+      : 'http://127.0.0.1:5000');
+  
+  return `${apiURL}${path}`;
+};
+
 export default function Progress() {
   const { user } = useAuthStore() as any;
   const { 
@@ -148,7 +160,7 @@ export default function Progress() {
 
   const isInCurrentWeek = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d >= startOfWeek && d.getDay() !== 0; // Exclude Sunday
+    return d >= startOfWeek; // Include Sunday as well
   };
 
   // 1. Weekly Calories Burned (from workouts)
@@ -228,7 +240,7 @@ export default function Progress() {
   };
 
   return (
-    <div className="space-y-8 pb-12 select-none">
+    <div className="space-y-8 pb-28 md:pb-12 select-none">
       
       {/* Header */}
       <div>
@@ -357,7 +369,7 @@ export default function Progress() {
             {beforePhotoUrl ? (
               <>
                 <img 
-                  src={beforePhotoUrl} 
+                  src={getFullImageUrl(beforePhotoUrl)} 
                   alt="Before Progress" 
                   className="absolute inset-0 w-full h-full object-cover rounded-2xl group-hover:opacity-30 transition-opacity"
                 />
@@ -396,7 +408,7 @@ export default function Progress() {
             {photoUrl ? (
               <>
                 <img 
-                  src={photoUrl} 
+                  src={getFullImageUrl(photoUrl)} 
                   alt="After Progress" 
                   className="absolute inset-0 w-full h-full object-cover rounded-2xl group-hover:opacity-30 transition-opacity"
                 />

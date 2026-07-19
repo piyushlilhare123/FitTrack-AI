@@ -505,7 +505,7 @@ export default function Dashboard() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 5); // Up to Saturday
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Up to Sunday
     endOfWeek.setHours(23, 59, 59, 999);
     
     const burnedByDate: { [key: string]: number } = {};
@@ -518,13 +518,13 @@ export default function Dashboard() {
       }
     });
 
-    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const details = [];
 
     let totalBudget = 0;
     let totalConsumed = 0;
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       const targetDate = new Date(startOfWeek);
       targetDate.setDate(startOfWeek.getDate() + i);
       const dateStr = targetDate.toDateString();
@@ -577,9 +577,9 @@ export default function Dashboard() {
     startOfWeek.setDate(today.getDate() - daysToSubtract);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       const targetDate = new Date(startOfWeek);
       targetDate.setDate(startOfWeek.getDate() + i);
       const dateStr = targetDate.toDateString();
@@ -648,7 +648,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8 pb-12 select-none">
+    <div className="space-y-8 pb-28 md:pb-12 select-none">
       
       {/* Welcome green/teal banner matching design reference */}
       <div className="rounded-3xl p-8 bg-gradient-to-r from-[#038356] to-[#0A4B3A] border border-white/5 shadow-2xl relative overflow-hidden">
@@ -677,7 +677,7 @@ export default function Dashboard() {
         {/* Main Calories Consumed & Burned card */}
         <div className="lg:col-span-8 glass-card border border-white/5 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-2xl hover:border-white/10 transition-all">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center space-x-3.5">
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                   <Apple className="w-5 h-5" />
@@ -687,9 +687,9 @@ export default function Dashboard() {
                   <h3 className="text-2xl font-mono font-extrabold text-white tracking-tight">{caloriesConsumed}</h3>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <span className="text-[10px] uppercase font-bold text-mutedText tracking-widest">Limit</span>
-                <p className="text-lg font-mono font-extrabold text-white">{caloriesLimit}</p>
+                <p className="text-lg sm:text-xl font-mono font-extrabold text-white">{caloriesLimit}</p>
               </div>
             </div>
 
@@ -710,7 +710,7 @@ export default function Dashboard() {
 
           {/* Sub Stat: Calories Burned */}
           <div className="pt-4 border-t border-white/5 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
                   <Flame className="w-4 h-4" />
@@ -720,9 +720,9 @@ export default function Dashboard() {
                   <p className="text-sm font-mono font-extrabold text-white">{caloriesBurnedToday} kcal</p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <span className="text-[10px] uppercase font-bold text-mutedText tracking-widest">Goal</span>
-                <p className="text-sm font-mono font-bold text-white">{caloriesBurnedGoal} kcal</p>
+                <p className="text-sm sm:text-base font-mono font-bold text-white">{caloriesBurnedGoal} kcal</p>
               </div>
             </div>
 
@@ -1426,35 +1426,35 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-[#0A0F16]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+            className="fixed inset-0 z-[200] bg-[#0A0F16]/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-[#121A25] border border-white/10 rounded-3xl p-10 max-w-2xl w-full text-center shadow-[0_0_100px_rgba(0,0,0,0.8)] relative overflow-hidden"
+              className="bg-[#121A25] border border-white/10 rounded-3xl p-6 sm:p-10 max-w-2xl w-full text-center shadow-[0_0_100px_rgba(0,0,0,0.8)] relative overflow-hidden max-h-[90vh] overflow-y-auto my-auto"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#39FF14] via-cyan-500 to-[#C084FC]" />
               
-              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-[#39FF14]/20 to-cyan-500/20 rounded-full flex items-center justify-center mb-8 border border-white/5">
-                <span className="text-5xl">🧘‍♂️</span>
+              <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-[#39FF14]/20 to-cyan-500/20 rounded-full flex items-center justify-center mb-6 sm:mb-8 border border-white/5">
+                <span className="text-3xl sm:text-5xl">🧘‍♂️</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-4 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-2 sm:mb-4 tracking-tight">
                 Today is Sunday.
               </h1>
               
-              <h2 className="text-2xl md:text-3xl font-bold text-accentCyan mb-6">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-accentCyan mb-4 sm:mb-6">
                 Your Official Rest Day.
               </h2>
               
-              <div className="space-y-6 mb-10 max-w-xl mx-auto">
-                <p className="text-lg text-mutedText leading-relaxed">
+              <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10 max-w-xl mx-auto">
+                <p className="text-sm sm:text-base md:text-lg text-mutedText leading-relaxed">
                   Take it easy today, stay hydrated, take some cheat meal and enjoy your time off.
                 </p>
                 
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3 text-left shadow-[0_0_15px_rgba(239,68,68,0.15)]">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 sm:p-4 flex items-start gap-3 text-left shadow-[0_0_15px_rgba(239,68,68,0.15)]">
                   <Activity className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-sm text-red-100/90 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-red-100/90 leading-relaxed font-medium">
                     <span className="text-red-500 font-black uppercase tracking-wide">Note:</span> Today's calories consumed, calories burned, water intake, and any weekly sessions are strictly excluded from your weekly reports and progress tracking.
                   </p>
                 </div>
@@ -1462,7 +1462,7 @@ export default function Dashboard() {
               
               <button 
                 onClick={handleDismissSunday}
-                className="px-10 py-4 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-lg tracking-wide transition-all hover:scale-105 active:scale-95 glow-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                className="px-6 py-3 sm:px-10 sm:py-4 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-sm sm:text-lg tracking-wide transition-all hover:scale-105 active:scale-95 glow-white shadow-[0_0_20px_rgba(255,255,255,0.4)]"
               >
                 I Understand, Continue to Dashboard
               </button>

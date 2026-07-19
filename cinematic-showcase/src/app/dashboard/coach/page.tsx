@@ -10,7 +10,8 @@ import {
   ArrowRight,
   Loader2,
   Plus,
-  MessageSquare
+  MessageSquare,
+  X
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -21,7 +22,10 @@ export default function AICoach() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') return window.innerWidth >= 768;
+    return true;
+  });
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -138,6 +142,9 @@ export default function AICoach() {
   const loadConversation = async (id: string) => {
     setActiveChatId(id);
     setIsLoading(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
     try {
       const res = await api.get(`/api/ai/conversations/${id}`);
       setMessages(res.data.messages);
@@ -150,6 +157,9 @@ export default function AICoach() {
 
   const startNewChat = async () => {
     setIsLoading(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
     try {
       const res = await api.post('/api/ai/conversations');
       setConversations(prev => [res.data, ...prev]);
@@ -485,15 +495,23 @@ export default function AICoach() {
     <div className="h-[calc(100vh-8rem)] flex gap-6 pb-4 select-none">
       
       {/* Sidebar for History */}
-      <Card className={`w-64 flex-shrink-0 flex flex-col h-full overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 hidden'}`}>
-        <div className="p-4 border-b border-white/5">
+      <Card className={`w-64 flex-shrink-0 flex flex-col h-full overflow-hidden transition-all duration-300 md:relative absolute md:z-auto z-20 md:left-auto left-0 md:bg-transparent bg-[#070b13]/98 border-r border-white/10 md:border-none ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none md:flex-shrink-0'}`}>
+        <div className="p-4 border-b border-white/5 flex items-center justify-between">
           <button 
             onClick={startNewChat}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/20 text-white text-xs font-bold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-white/20 text-white text-xs font-bold transition-all disabled:opacity-50"
           >
             <Plus className="w-4 h-4 text-actionGreen" />
             New Chat
+          </button>
+          
+          {/* Close button for mobile sidebar */}
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden ml-2 p-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 text-mutedText hover:text-white"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
         
