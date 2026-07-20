@@ -2,6 +2,7 @@ const NutritionLog = require('../models/NutritionLog');
 const User = require('../models/User');
 const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
 let openai = null;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && process.env.OPENAI_API_KEY.length > 20) {
@@ -246,7 +247,7 @@ function generateFallbackMealPlan(goal) {
 exports.updateWater = async (req, res, next) => {
   try {
     const { waterGlasses, date } = req.body;
-    
+
     const queryDate = date ? new Date(date) : new Date();
     const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
@@ -311,19 +312,16 @@ Return ONLY a JSON object matching this structure. Do not include markdown, back
 
     let resultData = null;
     try {
-      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-3.5-flash" });
       const result = await model.generateContent(promptText);
       let textResponse = result.response.text() || '{}';
       textResponse = textResponse.replace(/```json|```/g, '').trim();
       resultData = JSON.parse(textResponse);
     } catch (apiError) {
       console.error("Gemini API Error in calculateAIWaterTarget:", apiError);
-      if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
-        res.status(429);
-        return next(new Error("Bhai, our AI nutrition search is taking a break! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 💧"));
-      }
-      res.status(500);
-      return next(new Error(`Failed to calculate hydration plan: ${apiError.message}`));
+      const { status, message } = getFriendlyAIError(apiError, 'hydration');
+      res.status(status);
+      return next(new Error(message));
     }
 
     if (resultData && resultData.waterGlasses) {

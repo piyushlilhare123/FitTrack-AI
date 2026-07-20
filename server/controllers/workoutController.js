@@ -1,6 +1,7 @@
 const Workout = require('../models/Workout');
 const User = require('../models/User');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
 // Initialize Gemini only if valid key exists
 let genAI = null;
@@ -96,12 +97,9 @@ User Specs:
       workoutPlan = JSON.parse(textResponse);
     } catch (err) {
       console.error('Gemini API call failed:', err.message);
-      if (err.status === 429 || err?.message?.includes('429') || err?.message?.includes('quota')) {
-        res.status(429);
-        return next(new Error("Bhai, our AI trainer is done for today (Daily Limit Reached) or catching its breath! Please wait 1 minute to check, or try again tomorrow. 🏋️‍♂️"));
-      }
-      res.status(500);
-      return next(new Error(`Failed to generate workout plan: ${err.message}`));
+      const { status, message } = getFriendlyAIError(err, 'workout');
+      res.status(status);
+      return next(new Error(message));
     }
 
     // Ensure the name contains the minute tagline (e.g. "(X min)")

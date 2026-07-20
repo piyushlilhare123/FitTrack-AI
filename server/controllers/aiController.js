@@ -1,6 +1,8 @@
 const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const ChatConversation = require('../models/ChatConversation');
+const { getFriendlyAIError } = require('../utils/aiErrorHelper');
+
 
 let openai = null;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && process.env.OPENAI_API_KEY.length > 20) {
@@ -119,17 +121,18 @@ exports.sendMessage = async (req, res, next) => {
           reply = "The AI generated an empty response. Please try again.";
         }
       } else if (response.status === 429) {
-        // Handle Google Free Tier Rate Limit gracefully
-        reply = "Whoa bhai, we hit the speed limit (15 messages/min) or daily free limit! Wait 60 seconds to see if it resumes, or let's connect again tomorrow! 🌅";
+        reply = "🤖 Our AI Coach has hit its daily limit. It'll be back after 12:30 PM IST — fresh and ready to help!";
+      } else if (response.status === 503) {
+        reply = "🤖 AI Coach is super busy right now (high demand). Please wait a few seconds and send your message again!";
       } else {
         const errorData = await response.json();
         console.error('Gemini API error:', errorData);
-        const errorText = errorData.error?.message || 'Unknown API Error';
-        reply = `AI API Error: ${errorText}`;
+        reply = "🤖 AI Coach hit a snag. Please try again in a moment.";
       }
     } catch (err) {
       console.error('Gemini API call failed:', err.message);
-      reply = `Failed to contact AI: ${err.message}`;
+      const { message } = getFriendlyAIError(err, 'chat');
+      reply = message;
     }
 
     conversation.messages.push({ sender: 'ai', text: reply });
@@ -256,11 +259,8 @@ All gram values should be realistic for a single serving. Return raw JSON only.`
       textResponse = response.text() || '{}';
     } catch (apiError) {
       console.error("Gemini API Error:", apiError);
-      if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
-        console.log("Rate limit reached in scanFood.");
-        return res.status(429).json({ success: false, error: "Bhai, our AI dietician has completed today's rounds! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 🥗" });
-      }
-      throw apiError;
+      const { status, message } = getFriendlyAIError(apiError, 'scanner');
+      return res.status(status).json({ success: false, error: message });
     }
     
     // Clean markdown if OpenAI accidentally included it
@@ -332,11 +332,8 @@ All gram values should be realistic for the described serving. Return raw JSON o
       textResponse = response.text() || '{}';
     } catch (apiError) {
       console.error("Gemini API Error:", apiError);
-      if (apiError.status === 429 || apiError?.message?.includes('429') || apiError?.message?.includes('quota')) {
-        console.log("Rate limit reached in searchFoodText.");
-        return res.status(429).json({ success: false, error: "Bhai, our AI nutrition search is taking a break! (Daily/Rate Limit Reached). Please wait 1 minute to check, or try again tomorrow. 💧" });
-      }
-      throw apiError;
+      const { status, message } = getFriendlyAIError(apiError, 'nutrition');
+      return res.status(status).json({ success: false, error: message });
     }
     
     // Clean markdown if Gemini accidentally included it
