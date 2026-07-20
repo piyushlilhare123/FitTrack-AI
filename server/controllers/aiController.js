@@ -81,9 +81,12 @@ exports.sendMessage = async (req, res, next) => {
 
     const baseSystemPrompt = require('./systemPrompt');
     const currentTimeString = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'long' });
-    const systemPrompt = `${baseSystemPrompt}\n\n## REAL-TIME CONTEXT\nThe exact current date and time right now is: ${currentTimeString}. You can use this to say 'Good morning', 'Good evening', or answer questions about what time it is!`;
+    const systemPrompt = `${baseSystemPrompt}\n\n## REAL-TIME CONTEXT\nCurrent time: ${currentTimeString}`;
+    
+    // Only send last 10 messages to reduce token count and improve response speed
+    const recentMessages = conversation.messages.slice(-10);
     const contents = [];
-    conversation.messages.forEach(m => {
+    recentMessages.forEach(m => {
       contents.push({
         role: m.sender === 'user' ? 'user' : 'model',
         parts: [{ text: m.text }]
@@ -100,7 +103,7 @@ exports.sendMessage = async (req, res, next) => {
       
     let reply = '';
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
