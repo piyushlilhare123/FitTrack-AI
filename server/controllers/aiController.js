@@ -123,11 +123,15 @@ exports.sendMessage = async (req, res, next) => {
       } else if (response.status === 429) {
         reply = "🤖 Our AI Coach has hit its daily limit. It'll be back after 12:30 PM IST — fresh and ready to help!";
       } else if (response.status === 503) {
-        reply = "🤖 AI Coach is super busy right now (high demand). Please wait a few seconds and send your message again!";
+        reply = "🤖 AI Coach is handling peak traffic right now. Please wait a few seconds and send your message again!";
       } else {
-        const errorData = await response.json();
-        console.error('Gemini API error:', errorData);
-        reply = "🤖 AI Coach hit a snag. Please try again in a moment.";
+        // Safely log the error without exposing raw text to users
+        try { const errBody = await response.json(); console.error('Gemini API error:', errBody); } catch (_) {}
+        if (response.status >= 500) {
+          reply = "🤖 AI Coach is experiencing high demand right now. Please wait a moment and try again!";
+        } else {
+          reply = "🤖 AI Coach hit a snag. Please try again in a moment.";
+        }
       }
     } catch (err) {
       console.error('Gemini API call failed:', err.message);
