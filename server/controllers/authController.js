@@ -70,7 +70,7 @@ const calculateCalorieMetrics = async (user) => {
 
   if (genAI) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const promptText = `You are an expert fitness coach AI. Calculate the user's daily calories consumption limit (caloriesLimit), daily workout calories burned goal (caloriesBurnedGoal), and daily water intake goal in glasses of 250ml (waterTarget) based on:
 Age: ${age}
 Gender: ${gender}

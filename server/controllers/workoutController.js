@@ -69,7 +69,7 @@ exports.generateWorkoutPlan = async (req, res, next) => {
     let workoutPlan = null;
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const promptText = `You are an expert personal trainer. Generate a highly customized workout session based on user specifications.
 Create a unique, creative, and inspiring name for the workout session (e.g., "Velocity Shred Pro", "Apex Iron Build", "Kinetic Flow Endurance") that is specific to the goal and different every time. Avoid generic names like "HIIT Workout" or "Workout Session".
 Return ONLY a JSON object matching this structure. No markdown formatting, no backticks, just raw JSON:
