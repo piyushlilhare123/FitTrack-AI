@@ -2,6 +2,7 @@ const NutritionLog = require('../models/NutritionLog');
 const User = require('../models/User');
 const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
 let openai = null;
@@ -11,11 +12,13 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
   });
 }
 
-let genAI = null;
-if (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
+// Groq for text-based AI (hydration, meal plan)
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
+// Gemini only for food image scanning (vision support)
 let nutritionGenAI = null;
 if (process.env.GEMINI_NUTRITION_KEY) {
   nutritionGenAI = new GoogleGenerativeAI(process.env.GEMINI_NUTRITION_KEY);
@@ -285,15 +288,15 @@ exports.calculateAIWaterTarget = async (req, res, next) => {
       return next(new Error('Please provide weight (kg) and daily workout time (minutes)'));
     }
 
-    if (!nutritionGenAI) {
+    if (!groq) {
       res.status(500);
-      return next(new Error('Nutrition API key is missing. Please configure GEMINI_NUTRITION_KEY in your server .env file.'));
+      return next(new Error('Groq API key is missing. Please configure GROQ_API_KEY in your server .env file.'));
     }
 
     const weightVal = Number(weight);
     const workoutTimeVal = Number(workoutTime);
 
-    // Dynamic prompt for Gemini
+    // Dynamic prompt for Groq
     const promptText = `You are a professional dietitian. Estimate the optimal daily water intake in standard glasses of 250ml for an individual based on the following specifications:
 - Weight: ${weightVal} kg
 - Daily Workout Duration: ${workoutTimeVal} minutes
@@ -312,13 +315,16 @@ Return ONLY a JSON object matching this structure. Do not include markdown, back
 
     let resultData = null;
     try {
-      const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(promptText);
-      let textResponse = result.response.text() || '{}';
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.3,
+      });
+      let textResponse = completion.choices[0].message.content || '{}';
       textResponse = textResponse.replace(/```json|```/g, '').trim();
       resultData = JSON.parse(textResponse);
     } catch (apiError) {
-      console.error("Gemini API Error in calculateAIWaterTarget:", apiError);
+      console.error("Groq API Error in calculateAIWaterTarget:", apiError);
       const { status, message } = getFriendlyAIError(apiError, 'hydration');
       res.status(status);
       return next(new Error(message));

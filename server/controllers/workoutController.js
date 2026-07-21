@@ -1,12 +1,12 @@
 const Workout = require('../models/Workout');
 const User = require('../models/User');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
-// Initialize Gemini only if valid key exists
-let genAI = null;
-if (process.env.GEMINI_WORKOUT_KEY || process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_WORKOUT_KEY || process.env.GEMINI_API_KEY);
+// Initialize Groq
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
 // Log a completed workout
@@ -61,16 +61,14 @@ exports.generateWorkoutPlan = async (req, res, next) => {
 
     console.log(`Generating workout for user: Goal=${goalStr}, Level=${levelStr}, Time=${timeMinutes}m, Equipment=${equipList}`);
 
-    if (!genAI) {
+    if (!groq) {
       res.status(500);
-      return next(new Error('Gemini API key is missing. Please configure GEMINI_WORKOUT_KEY in your server .env file.'));
+      return next(new Error('Groq API key is missing. Please configure GROQ_API_KEY in your server .env file.'));
     }
 
     let workoutPlan = null;
 
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const promptText = `You are an expert personal trainer. Generate a highly customized workout session based on user specifications.
+    const promptText = `You are an expert personal trainer. Generate a highly customized workout session based on user specifications.
 Create a unique, creative, and inspiring name for the workout session (e.g., "Velocity Shred Pro", "Apex Iron Build", "Kinetic Flow Endurance") that is specific to the goal and different every time. Avoid generic names like "HIIT Workout" or "Workout Session".
 Return ONLY a JSON object matching this structure. No markdown formatting, no backticks, just raw JSON:
 {
@@ -89,14 +87,18 @@ User Specs:
 - Available Equipment: ${equipList}
 - Available Time: ${timeMinutes} minutes
 - Fitness Level: ${levelStr}`;
-
-      const result = await model.generateContent(promptText);
-      let textResponse = result.response.text() || '{}';
-      // Clean markdown if Gemini accidentally included it
+    try {
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.7,
+      });
+      let textResponse = completion.choices[0].message.content || '{}';
+      // Clean markdown if model accidentally included it
       textResponse = textResponse.replace(/```json|```/g, '').trim();
       workoutPlan = JSON.parse(textResponse);
     } catch (err) {
-      console.error('Gemini API call failed:', err.message);
+      console.error('Groq API call failed:', err.message);
       const { status, message } = getFriendlyAIError(err, 'workout');
       res.status(status);
       return next(new Error(message));

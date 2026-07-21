@@ -1,16 +1,21 @@
 const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const ChatConversation = require('../models/ChatConversation');
 const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
-
 let openai = null;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && process.env.OPENAI_API_KEY.length > 20) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
+// Groq for text chat, voice, food search, hydration
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
+
+// Gemini only for food image scanning (vision)
 let nutritionGenAI = null;
 if (process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY) {
   nutritionGenAI = new GoogleGenerativeAI(process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY);
@@ -93,61 +98,42 @@ exports.sendMessage = async (req, res, next) => {
       });
     });
 
-    // Extract isVoice flag from request to determine which API key to use
+    // Extract isVoice flag from request
     const { isVoice } = req.body;
+    const label = isVoice ? '🎤 AI Voice Coach' : '🤖 AI Coach';
 
-    // Use dedicated API keys based on text vs speech
-    const geminiKey = isVoice 
-      ? (process.env.GEMINI_VOICE_KEY || process.env.GEMINI_API_KEY)
-      : (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
-      
+    // Build messages for Groq (OpenAI format)
+    const groqMessages = [
+      { role: 'system', content: systemPrompt },
+      ...recentMessages.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }))
+    ];
+
     let reply = '';
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: contents
-        })
+      if (!groq) throw new Error('Groq API key not configured');
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        temperature: 0.8,
+        max_tokens: 1024,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-          reply = data.candidates[0].content.parts[0].text;
-        } else {
-          reply = "The AI generated an empty response. Please try again.";
-        }
-      } else if (response.status === 429) {
-        // Check Retry-After header to distinguish per-minute throttle vs true daily limit
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '99999', 10);
-        const label = isVoice ? '🎤 AI Voice Coach' : '🤖 AI Coach';
-        if (retryAfter < 300) {
-          reply = `${label} is getting too many requests right now. Please wait 30 seconds and try again!`;
-        } else {
-          reply = `${label} has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!`;
-        }
-      } else if (response.status === 503) {
-        const label = isVoice ? '🎤 AI Voice Coach' : '🤖 AI Coach';
+      reply = completion.choices[0].message.content || 'The AI generated an empty response. Please try again.';
+    } catch (err) {
+      console.error('Groq API call failed:', err.message);
+      const errMsg = err?.message || '';
+      if (errMsg.includes('429') || errMsg.includes('rate_limit')) {
+        const isShortWait = errMsg.includes('Please try again in') && !errMsg.includes('day');
+        reply = isShortWait
+          ? `${label} is getting too many requests right now. Please wait 30 seconds and try again!`
+          : `${label} has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!`;
+      } else if (errMsg.includes('503') || errMsg.includes('Service Unavailable')) {
         reply = `${label} is handling peak traffic right now. Please wait a few seconds and send your message again!`;
       } else {
-        // Safely log the error without exposing raw text to users
-        try { const errBody = await response.json(); console.error('Gemini API error:', errBody); } catch (_) {}
-        if (response.status >= 500) {
-          reply = "🤖 AI Coach is experiencing high demand right now. Please wait a moment and try again!";
-        } else {
-          reply = "🤖 AI Coach hit a snag. Please try again in a moment.";
-        }
+        reply = `${label} hit a snag. Please try again in a moment.`;
       }
-    } catch (err) {
-      console.error('Gemini API call failed:', err.message);
-      const { message } = getFriendlyAIError(err, 'chat');
-      reply = message;
     }
 
     conversation.messages.push({ sender: 'ai', text: reply });
@@ -230,13 +216,17 @@ exports.scanFood = async (req, res, next) => {
     const { imageBase64 } = req.body;
     if (!imageBase64) {
       res.status(400);
-      throw new Error('Please provide an imageBase64 string');
+      throw new Error("Please provide an imageBase64 string");
     }
 
     if (!nutritionGenAI) {
       res.status(500);
-      throw new Error('Gemini API key is missing. Please add GEMINI_API_KEY to your .env file.');
+      throw new Error("Gemini API key is missing for Food Scanner. Please add GEMINI_NUTRITION_KEY to your .env file.");
     }
+
+    const mimeType = imageBase64.startsWith("data:image/png") ? "image/png" : "image/jpeg";
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const imageParts = [{ inlineData: { data: base64Data, mimeType } }];
 
     const promptText = `Analyze this food image and return ONLY a JSON object — no markdown, no backticks, no preamble.
 
@@ -258,34 +248,25 @@ micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Mag
 All gram values should be realistic for a single serving. Return raw JSON only.`;
 
     const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const imageParts = [
-      {
-        inlineData: {
-          data: imageBase64,
-          mimeType: "image/jpeg"
-        }
-      }
-    ];
 
-    let textResponse = '{}';
+    let textResponse = "{}";
     try {
       const result = await model.generateContent([promptText, ...imageParts]);
       const response = await result.response;
-      textResponse = response.text() || '{}';
+      textResponse = response.text() || "{}";
     } catch (apiError) {
-      console.error("Gemini API Error:", apiError);
-      const { status, message } = getFriendlyAIError(apiError, 'scanner');
+      console.error("Gemini Scan Food Error:", apiError);
+      const { status, message } = getFriendlyAIError(apiError, "scanner");
       return res.status(status).json({ success: false, error: message });
     }
     
-    // Clean markdown if OpenAI accidentally included it
-    textResponse = textResponse.replace(/```json|```/g, '').trim();
+    textResponse = textResponse.replace(/```json|```/g, "").trim();
     
     let parsedData;
     try {
       parsedData = JSON.parse(textResponse);
     } catch (e) {
-      console.error("Failed to parse Gemini JSON:", textResponse);
+      console.error("Failed to parse Gemini Scan Food JSON:", textResponse);
       parsedData = {
         foodName: "Unknown Food",
         servingSize: "1 plate",
@@ -300,7 +281,7 @@ All gram values should be realistic for a single serving. Return raw JSON only.`
 
     res.json({ success: true, nutritionData: parsedData });
   } catch (error) {
-    console.error('Error Details:', error);
+    console.error("Error Details:", error);
     next(error);
   }
 };
@@ -310,12 +291,12 @@ exports.searchFoodText = async (req, res, next) => {
     const { text } = req.body;
     if (!text) {
       res.status(400);
-      throw new Error('Please provide food text to search');
+      throw new Error("Please provide food text to search");
     }
 
-    if (!nutritionGenAI) {
+    if (!groq) {
       res.status(500);
-      throw new Error('Gemini API key is missing. Please add GEMINI_API_KEY to your .env file.');
+      throw new Error("Groq API key is missing. Please add GROQ_API_KEY to your .env file.");
     }
 
     const promptText = `Analyze the following food item/meal: "${text}".
@@ -338,33 +319,33 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for the described serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    let textResponse = '{}';
+    let textResponse = "{}";
     try {
-      const result = await model.generateContent(promptText);
-      const response = await result.response;
-      textResponse = response.text() || '{}';
+      const completion = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: promptText }],
+        temperature: 0.3,
+      });
+      textResponse = completion.choices[0].message.content || "{}";
     } catch (apiError) {
-      console.error("Gemini API Error:", apiError);
-      const { status, message } = getFriendlyAIError(apiError, 'nutrition');
+      console.error("Groq Food Search Error:", apiError);
+      const { status, message } = getFriendlyAIError(apiError, "nutrition");
       return res.status(status).json({ success: false, error: message });
     }
     
-    // Clean markdown if Gemini accidentally included it
-    textResponse = textResponse.replace(/```json|```/g, '').trim();
+    textResponse = textResponse.replace(/```json|```/g, "").trim();
     
     let parsedData;
     try {
       parsedData = JSON.parse(textResponse);
     } catch (e) {
-      console.error("Failed to parse Gemini JSON:", textResponse);
+      console.error("Failed to parse Groq JSON:", textResponse);
       throw new Error("Failed to generate nutrition data");
     }
 
     res.json({ success: true, nutritionData: parsedData });
   } catch (error) {
-    console.error('Error Details:', error);
+    console.error("Error Details:", error);
     next(error);
   }
 };

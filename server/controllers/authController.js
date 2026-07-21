@@ -1,11 +1,11 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
-// Initialize Gemini only if valid key exists
-let genAI = null;
-if (process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_TEXT_KEY || process.env.GEMINI_API_KEY);
+// Initialize Groq
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
 const generateToken = (id) => {
@@ -68,10 +68,7 @@ const calculateCalorieMetrics = async (user) => {
   else if (fitnessLevel === 'advanced') waterTarget += 2;
   if (goal === 'lose_weight' || goal === 'improve_endurance') waterTarget += 1;
 
-  if (genAI) {
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const promptText = `You are an expert fitness coach AI. Calculate the user's daily calories consumption limit (caloriesLimit), daily workout calories burned goal (caloriesBurnedGoal), and daily water intake goal in glasses of 250ml (waterTarget) based on:
+  const promptText = `You are an expert fitness coach AI. Calculate the user's daily calories consumption limit (caloriesLimit), daily workout calories burned goal (caloriesBurnedGoal), and daily water intake goal in glasses of 250ml (waterTarget) based on:
 Age: ${age}
 Gender: ${gender}
 Weight: ${weight} kg
@@ -80,17 +77,23 @@ Goal: ${goal}
 Fitness Level: ${fitnessLevel}
 
 Guidelines:
-1. Use Mifflin-St Jeor formula for BMR (Male: 10w + 6.25h - 5a + 5, Female: 10w + 6.25h - 5a - 161) and activity multipliers (beginner=1.2, intermediate=1.375, advanced=1.55) to compute TDEE, then apply goal offsets (lose_weight=-500, gain_muscle=+300, maintain=0).
-2. For waterTarget (in 250ml glasses), use standard recommendation: baseline is weight (kg) * 0.033 / 0.25 (glasses). Add extra glasses for activity (intermediate=+1, advanced=+2) and goals like weight loss or endurance (+1).
-3. Return ONLY a JSON object matching this structure. Do not include markdown, backticks, or other text:
+1. Use Mifflin-St Jeor formula for BMR and activity multipliers (beginner=1.2, intermediate=1.375, advanced=1.55) to compute TDEE, then apply goal offsets (lose_weight=-500, gain_muscle=+300, maintain=0).
+2. For waterTarget (in 250ml glasses), use: weight (kg) * 0.033 / 0.25 (glasses). Add extra for activity (intermediate=+1, advanced=+2) and goals like weight loss or endurance (+1).
+3. Return ONLY a JSON object. No markdown, no backticks:
 {
   "caloriesLimit": number,
   "caloriesBurnedGoal": number,
   "waterTarget": number
 }`;
 
-      const result = await model.generateContent(promptText);
-      let textResponse = result.response.text() || '{}';
+  if (groq) {
+    try {
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.2,
+      });
+      let textResponse = completion.choices[0].message.content || '{}';
       textResponse = textResponse.replace(/```json|```/g, '').trim();
       const data = JSON.parse(textResponse);
       if (data.caloriesLimit && data.caloriesBurnedGoal && data.waterTarget) {
@@ -104,7 +107,7 @@ Guidelines:
         };
       }
     } catch (err) {
-      console.error('Gemini Calorie/Water Calculation failed, using BMR formula fallback:', err.message);
+      console.error('Groq Calorie/Water Calculation failed, using BMR formula fallback:', err.message);
     }
   }
 
