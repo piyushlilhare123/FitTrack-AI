@@ -6,42 +6,42 @@
 const FRIENDLY_MESSAGES = {
   workout: {
     rateLimit: "🏋️ AI Trainer is receiving high traffic right now. Please wait 30 seconds and try again!",
-    quota:     "🏋️ Our AI Trainer has reached its daily limit. It'll reset after 12:30 PM IST — fresh and ready!",
-    busy:      "🏋️ AI Trainer is super busy right now (high demand). Please wait a few seconds and try again!",
+    quota:     "🏋️ Our AI Trainer has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "🏋️ AI Trainer is handling peak traffic right now. Please wait a few seconds and try again!",
     apiKey:    "🏋️ AI Trainer service is currently updating. Please try again in a moment!",
     generic:   "🏋️ AI Trainer hit a minor snag. Please try again in a moment.",
   },
   nutrition: {
     rateLimit: "🍎 AI Nutritionist is handling too many requests. Please wait 30 seconds and try again!",
-    quota:     "🍎 Our AI Nutritionist has reached today's limit. It'll reset after 12:30 PM IST!",
-    busy:      "🍎 AI Nutritionist is overwhelmed right now. Please wait a few seconds and try again!",
+    quota:     "🍎 Our AI Nutritionist has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "🍎 AI Nutritionist is handling peak traffic right now. Please wait a few seconds and try again!",
     apiKey:    "🍎 AI Nutritionist service is updating. Please try again in a moment!",
     generic:   "🍎 AI Nutritionist hit a minor snag. Please try again in a moment.",
   },
   scanner: {
     rateLimit: "📷 AI Food Scanner is busy right now. Please wait 30 seconds and try again!",
-    quota:     "📷 AI Food Scanner has reached today's limit. It'll reset after 12:30 PM IST!",
-    busy:      "📷 AI Food Scanner is busy analyzing images right now. Please try again in a few seconds!",
+    quota:     "📷 AI Food Scanner has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "📷 AI Food Scanner is handling peak traffic right now. Please wait a few seconds and try again!",
     apiKey:    "📷 AI Food Scanner key is missing or unconfigured.",
     generic:   "📷 AI Food Scanner could not process this photo clearly. Please try another image!",
   },
   hydration: {
     rateLimit: "💧 AI Hydration Advisor is busy right now. Please wait 30 seconds and try again!",
-    quota:     "💧 AI Hydration Advisor has reached today's limit. It'll reset after 12:30 PM IST!",
-    busy:      "💧 AI Hydration Advisor is experiencing high demand. Please wait a few seconds and try again!",
+    quota:     "💧 AI Hydration Advisor has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "💧 AI Hydration Advisor is handling peak traffic right now. Please wait a few seconds and try again!",
     apiKey:    "💧 AI Hydration service is updating. Please try again in a moment!",
     generic:   "💧 AI Hydration Advisor hit a minor snag. Please try again in a moment.",
   },
   chat: {
     rateLimit: "🤖 AI Coach is handling high chat traffic right now. Please wait 30 seconds and send your message again!",
-    quota:     "🤖 AI Coach has reached today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    quota:     "🤖 AI Coach has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
     busy:      "🤖 AI Coach is handling peak traffic right now. Please wait a few seconds and send your message again!",
     apiKey:    "🤖 AI Coach service is updating. Please try again in a moment!",
     generic:   "🤖 AI Coach hit a minor snag. Please send your message again in a moment.",
   },
   voice: {
     rateLimit: "🎤 AI Voice Coach is handling high traffic right now. Please wait 30 seconds and try again!",
-    quota:     "🎤 AI Voice Coach has reached today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    quota:     "🎤 AI Voice Coach has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
     busy:      "🎤 AI Voice Coach is handling peak traffic right now. Please wait a few seconds and try again!",
     apiKey:    "🎤 AI Voice Coach service is updating. Please try again in a moment!",
     generic:   "🎤 AI Voice Coach hit a minor snag. Please speak again in a moment.",
@@ -49,19 +49,33 @@ const FRIENDLY_MESSAGES = {
 };
 
 /**
- * Detect if a 429 is a per-minute rate limit or a true daily quota limit.
+ * Detect if a 429 error is a per-minute temporary rate limit or a true daily quota limit.
  */
 function isPerMinuteRateLimit(err) {
   try {
     const msg = (err?.message || '').toLowerCase();
     const details = err?.errorDetails || [];
 
-    // Groq rate limit message parsing
-    if (msg.includes('rate_limit_exceeded') || msg.includes('please try again in')) {
-      if (!msg.includes('day') && !msg.includes('24h')) return true;
+    // If message mentions daily quota, resource_exhausted, or per-day limit -> NOT per-minute (return false)
+    if (
+      msg.includes('resource_exhausted') ||
+      msg.includes('quota') ||
+      msg.includes('per-day') ||
+      msg.includes('per day') ||
+      msg.includes('daily limit') ||
+      msg.includes('day limit') ||
+      msg.includes('tpd')
+    ) {
+      return false; // True daily quota exhaustion!
     }
 
-    // Gemini retryDelay parsing
+    // Groq per-minute throttle vs daily token limit check
+    if (msg.includes('rate_limit_exceeded') || msg.includes('please try again in')) {
+      if (msg.includes('day') || msg.includes('24h') || msg.includes('tpd')) return false;
+      return true;
+    }
+
+    // Gemini retryDelay check
     for (const d of details) {
       if (d.retryDelay) {
         const seconds = parseInt(d.retryDelay.replace('s', ''), 10);
@@ -70,7 +84,7 @@ function isPerMinuteRateLimit(err) {
     }
   } catch (_) {}
 
-  // If status is 429 and no explicit 24h indicator, default to per-minute rate limit
+  // Default to per-minute rate limit if unknown
   return true;
 }
 
