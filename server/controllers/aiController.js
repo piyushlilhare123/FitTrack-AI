@@ -250,10 +250,19 @@ All gram values should be realistic for a single serving. Return raw JSON only.`
       const result = await model.generateContent([promptText, ...imageParts]);
       const response = await result.response;
       textResponse = response.text() || "{}";
-    } catch (apiError) {
-      console.error("Gemini Scan Food Error:", apiError);
-      const { status, message } = getFriendlyAIError(apiError, "scanner");
-      return res.status(status).json({ success: false, error: message });
+    } catch (firstErr) {
+      console.warn("First attempt failed in scanFood, retrying in 2s:", firstErr.message);
+      // Wait 2s and retry once automatically
+      await new Promise(r => setTimeout(r, 2000));
+      try {
+        const result = await model.generateContent([promptText, ...imageParts]);
+        const response = await result.response;
+        textResponse = response.text() || "{}";
+      } catch (apiError) {
+        console.error("Gemini Scan Food Error after retry:", apiError);
+        const { status, message } = getFriendlyAIError(apiError, "scanner");
+        return res.status(status).json({ success: false, error: message });
+      }
     }
     
     textResponse = textResponse.replace(/```json|```/g, "").trim();
