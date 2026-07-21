@@ -1,108 +1,131 @@
 /**
  * Friendly AI error messages for users.
- * Called whenever a Gemini API call fails.
+ * Handles both Groq and Gemini API errors across all features.
  */
 
 const FRIENDLY_MESSAGES = {
   workout: {
-    rateLimit: "🏋️ AI Trainer is getting too many requests right now. Please wait 30 seconds and try again!",
-    quota:     "🏋️ Our AI Trainer has hit today's limit. Come back after 12:30 PM IST — it'll be fully recharged!",
+    rateLimit: "🏋️ AI Trainer is receiving high traffic right now. Please wait 30 seconds and try again!",
+    quota:     "🏋️ Our AI Trainer has reached its daily limit. It'll reset after 12:30 PM IST — fresh and ready!",
     busy:      "🏋️ AI Trainer is super busy right now (high demand). Please wait a few seconds and try again!",
-    generic:   "🏋️ AI Trainer hit a snag. Please try again in a moment.",
+    apiKey:    "🏋️ AI Trainer service is currently updating. Please try again in a moment!",
+    generic:   "🏋️ AI Trainer hit a minor snag. Please try again in a moment.",
   },
   nutrition: {
     rateLimit: "🍎 AI Nutritionist is handling too many requests. Please wait 30 seconds and try again!",
-    quota:     "🍎 Our AI Nutritionist has hit today's limit. Try again after 12:30 PM IST.",
+    quota:     "🍎 Our AI Nutritionist has reached today's limit. It'll reset after 12:30 PM IST!",
     busy:      "🍎 AI Nutritionist is overwhelmed right now. Please wait a few seconds and try again!",
-    generic:   "🍎 AI Nutritionist hit a snag. Please try again in a moment.",
+    apiKey:    "🍎 AI Nutritionist service is updating. Please try again in a moment!",
+    generic:   "🍎 AI Nutritionist hit a minor snag. Please try again in a moment.",
   },
   scanner: {
-    rateLimit: "📷 AI Food Scanner is busy. Please wait 30 seconds and try again!",
-    quota:     "📷 AI Food Scanner has hit today's limit. Try again after 12:30 PM IST.",
-    busy:      "📷 AI Food Scanner is busy right now. Please wait a few seconds and try again!",
-    generic:   "📷 AI Food Scanner hit a snag. Please try again in a moment.",
+    rateLimit: "📷 AI Food Scanner is busy right now. Please wait 30 seconds and try again!",
+    quota:     "📷 AI Food Scanner has reached today's limit. It'll reset after 12:30 PM IST!",
+    busy:      "📷 AI Food Scanner is busy analyzing images right now. Please try again in a few seconds!",
+    apiKey:    "📷 AI Food Scanner key is missing or unconfigured.",
+    generic:   "📷 AI Food Scanner could not process this photo clearly. Please try another image!",
   },
   hydration: {
-    rateLimit: "💧 AI Hydration Advisor is busy. Please wait 30 seconds and try again!",
-    quota:     "💧 AI Hydration Advisor has hit today's limit. Try again after 12:30 PM IST.",
+    rateLimit: "💧 AI Hydration Advisor is busy right now. Please wait 30 seconds and try again!",
+    quota:     "💧 AI Hydration Advisor has reached today's limit. It'll reset after 12:30 PM IST!",
     busy:      "💧 AI Hydration Advisor is experiencing high demand. Please wait a few seconds and try again!",
-    generic:   "💧 AI Hydration Advisor hit a snag. Please try again in a moment.",
+    apiKey:    "💧 AI Hydration service is updating. Please try again in a moment!",
+    generic:   "💧 AI Hydration Advisor hit a minor snag. Please try again in a moment.",
   },
   chat: {
-    rateLimit: "🤖 AI Coach is handling too many requests. Please wait 30 seconds and send your message again!",
-    quota:     "🤖 AI Coach has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
-    busy:      "🤖 AI Coach is handling peak traffic right now. Please wait a few seconds and try again!",
-    generic:   "🤖 AI Coach hit a snag. Please try again in a moment.",
+    rateLimit: "🤖 AI Coach is handling high chat traffic right now. Please wait 30 seconds and send your message again!",
+    quota:     "🤖 AI Coach has reached today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "🤖 AI Coach is handling peak traffic right now. Please wait a few seconds and send your message again!",
+    apiKey:    "🤖 AI Coach service is updating. Please try again in a moment!",
+    generic:   "🤖 AI Coach hit a minor snag. Please send your message again in a moment.",
   },
+  voice: {
+    rateLimit: "🎤 AI Voice Coach is handling high traffic right now. Please wait 30 seconds and try again!",
+    quota:     "🎤 AI Voice Coach has reached today's limit. It'll be back after 12:30 PM IST — fresh and ready!",
+    busy:      "🎤 AI Voice Coach is handling peak traffic right now. Please wait a few seconds and try again!",
+    apiKey:    "🎤 AI Voice Coach service is updating. Please try again in a moment!",
+    generic:   "🎤 AI Voice Coach hit a minor snag. Please speak again in a moment.",
+  }
 };
 
 /**
- * Detect if a 429 is a per-minute rate limit or a true daily quota exhaustion.
- * Daily quota -> retryDelay is very large (e.g. 86400s) or missing.
- * Per-minute  -> retryDelay is small (< 300s).
+ * Detect if a 429 is a per-minute rate limit or a true daily quota limit.
  */
 function isPerMinuteRateLimit(err) {
   try {
+    const msg = (err?.message || '').toLowerCase();
     const details = err?.errorDetails || [];
+
+    // Groq rate limit message parsing
+    if (msg.includes('rate_limit_exceeded') || msg.includes('please try again in')) {
+      if (!msg.includes('day') && !msg.includes('24h')) return true;
+    }
+
+    // Gemini retryDelay parsing
     for (const d of details) {
       if (d.retryDelay) {
         const seconds = parseInt(d.retryDelay.replace('s', ''), 10);
-        // Per-minute limit retries in < 5 minutes; daily limit retries in ~24h
         return seconds < 300;
       }
     }
   } catch (_) {}
-  // If no retryDelay info, assume it's a daily limit to be safe
-  return false;
+
+  // If status is 429 and no explicit 24h indicator, default to per-minute rate limit
+  return true;
 }
 
 /**
- * Get a friendly error message + HTTP status for a Gemini API error.
- * @param {Error} err - The caught error from Gemini SDK
- * @param {'workout'|'nutrition'|'scanner'|'hydration'|'chat'} section
+ * Get a friendly error message + HTTP status for any AI error (Groq or Gemini).
+ * @param {Error|object} err - The caught error
+ * @param {'workout'|'nutrition'|'scanner'|'hydration'|'chat'|'voice'} section
  * @returns {{ status: number, message: string }}
  */
 function getFriendlyAIError(err, section = 'nutrition') {
-  const msg = err?.message || '';
-  const status = err?.status || err?.errorDetails?.[0]?.status;
+  const msg = (err?.message || '').toLowerCase();
+  const status = err?.status || err?.statusCode || err?.errorDetails?.[0]?.status;
   const msgs = FRIENDLY_MESSAGES[section] || FRIENDLY_MESSAGES.nutrition;
 
-  // 429 — could be per-minute OR daily quota
+  // Missing or Invalid API key
+  if (
+    msg.includes('api key') ||
+    msg.includes('unauthorized') ||
+    msg.includes('invalid_api_key') ||
+    status === 401
+  ) {
+    return { status: 401, message: msgs.apiKey };
+  }
+
+  // 429 — Rate limit or Quota
   if (
     status === 429 ||
     msg.includes('429') ||
     msg.includes('quota') ||
-    msg.includes('RESOURCE_EXHAUSTED') ||
+    msg.includes('resource_exhausted') ||
     msg.includes('rate limit') ||
-    msg.includes('Rate limit')
+    msg.includes('rate_limit')
   ) {
     if (isPerMinuteRateLimit(err)) {
-      // Per-minute throttle — just wait 30-60 seconds
       return { status: 429, message: msgs.rateLimit };
     }
-    // True daily quota exhausted
     return { status: 429, message: msgs.quota };
   }
 
-  // 503 — Service Unavailable / High Demand
+  // 503 / High Demand / Service Unavailable / Overloaded
   if (
     status === 503 ||
+    status === 502 ||
+    status === 504 ||
     msg.includes('503') ||
-    msg.includes('Service Unavailable') ||
+    msg.includes('service unavailable') ||
     msg.includes('high demand') ||
     msg.includes('overloaded') ||
-    msg.includes('UNAVAILABLE')
+    msg.includes('unavailable')
   ) {
     return { status: 503, message: msgs.busy };
   }
 
-  // 404 — Model not found
-  if (status === 404 || msg.includes('404') || msg.includes('not found')) {
-    return { status: 500, message: `${msgs.generic} (Model configuration error.)` };
-  }
-
-  // Generic fallback
-  return { status: 500, message: msgs.generic };
+  // Generic fallback (never return raw error text to user)
+  return { status: status && status >= 400 && status < 600 ? status : 500, message: msgs.generic };
 }
 
 module.exports = { getFriendlyAIError };

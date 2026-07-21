@@ -62,8 +62,9 @@ exports.generateWorkoutPlan = async (req, res, next) => {
     console.log(`Generating workout for user: Goal=${goalStr}, Level=${levelStr}, Time=${timeMinutes}m, Equipment=${equipList}`);
 
     if (!groq) {
-      res.status(500);
-      return next(new Error('Groq API key is missing. Please configure GROQ_API_KEY in your server .env file.'));
+      const { status, message } = getFriendlyAIError(new Error('api key missing'), 'workout');
+      res.status(status);
+      return next(new Error(message));
     }
 
     let workoutPlan = null;

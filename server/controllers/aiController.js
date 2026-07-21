@@ -122,18 +122,10 @@ exports.sendMessage = async (req, res, next) => {
       });
       reply = completion.choices[0].message.content || 'The AI generated an empty response. Please try again.';
     } catch (err) {
-      console.error('Groq API call failed:', err.message);
-      const errMsg = err?.message || '';
-      if (errMsg.includes('429') || errMsg.includes('rate_limit')) {
-        const isShortWait = errMsg.includes('Please try again in') && !errMsg.includes('day');
-        reply = isShortWait
-          ? `${label} is getting too many requests right now. Please wait 30 seconds and try again!`
-          : `${label} has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!`;
-      } else if (errMsg.includes('503') || errMsg.includes('Service Unavailable')) {
-        reply = `${label} is handling peak traffic right now. Please wait a few seconds and send your message again!`;
-      } else {
-        reply = `${label} hit a snag. Please try again in a moment.`;
-      }
+      console.error('AI Chat API call failed:', err.message);
+      const section = isVoice ? 'voice' : 'chat';
+      const { message: friendlyMsg } = getFriendlyAIError(err, section);
+      reply = friendlyMsg;
     }
 
     conversation.messages.push({ sender: 'ai', text: reply });
@@ -220,8 +212,8 @@ exports.scanFood = async (req, res, next) => {
     }
 
     if (!nutritionGenAI) {
-      res.status(500);
-      throw new Error("Gemini API key is missing for Food Scanner. Please add GEMINI_NUTRITION_KEY to your .env file.");
+      const { status, message } = getFriendlyAIError(new Error('api key missing'), 'scanner');
+      return res.status(status).json({ success: false, error: message });
     }
 
     const mimeType = imageBase64.startsWith("data:image/png") ? "image/png" : "image/jpeg";
@@ -295,8 +287,8 @@ exports.searchFoodText = async (req, res, next) => {
     }
 
     if (!groq) {
-      res.status(500);
-      throw new Error("Groq API key is missing. Please add GROQ_API_KEY to your .env file.");
+      const { status, message } = getFriendlyAIError(new Error('api key missing'), 'nutrition');
+      return res.status(status).json({ success: false, error: message });
     }
 
     const promptText = `Analyze the following food item/meal: "${text}".
