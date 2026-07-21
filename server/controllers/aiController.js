@@ -18,6 +18,20 @@ function getGroq() {
   return groqClient;
 }
 
+const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+async function createGroqCompletion(groq, params) {
+  for (let i = 0; i < GROQ_MODELS.length; i++) {
+    const model = GROQ_MODELS[i];
+    try {
+      return await groq.chat.completions.create({ ...params, model });
+    } catch (err) {
+      console.warn(`Groq model ${model} failed (${err.message}). Trying fallback model...`);
+      if (i === GROQ_MODELS.length - 1) throw err;
+    }
+  }
+}
+
 // Gemini only for food image scanning (vision)
 let nutritionGenAI = null;
 if (process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY) {
@@ -118,8 +132,7 @@ exports.sendMessage = async (req, res, next) => {
     try {
       const groq = getGroq();
       if (!groq) throw new Error('Groq API key not configured');
-      const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+      const completion = await createGroqCompletion(groq, {
         messages: groqMessages,
         temperature: 0.8,
         max_tokens: 1024,
@@ -327,8 +340,7 @@ All gram values should be realistic for the described serving. Return raw JSON o
 
     let textResponse = "{}";
     try {
-      const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+      const completion = await createGroqCompletion(groq, {
         messages: [{ role: "user", content: promptText }],
         temperature: 0.3,
       });

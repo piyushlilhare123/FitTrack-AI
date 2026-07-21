@@ -11,6 +11,20 @@ function getGroq() {
   return groqClient;
 }
 
+const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+async function createGroqCompletion(groq, params) {
+  for (let i = 0; i < GROQ_MODELS.length; i++) {
+    const model = GROQ_MODELS[i];
+    try {
+      return await groq.chat.completions.create({ ...params, model });
+    } catch (err) {
+      console.warn(`Groq model ${model} failed (${err.message}). Trying fallback model...`);
+      if (i === GROQ_MODELS.length - 1) throw err;
+    }
+  }
+}
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretkeyfittrack123!', {
     expiresIn: '30d',
@@ -92,8 +106,7 @@ Guidelines:
   const groq = getGroq();
   if (groq) {
     try {
-      const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+      const completion = await createGroqCompletion(groq, {
         messages: [{ role: 'user', content: promptText }],
         temperature: 0.2,
       });
