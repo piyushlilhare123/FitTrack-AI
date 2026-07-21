@@ -13,9 +13,12 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 // Groq for text-based AI (hydration, meal plan)
-let groq = null;
-if (process.env.GROQ_API_KEY) {
-  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groqClient = null;
+function getGroq() {
+  if (!groqClient && process.env.GROQ_API_KEY) {
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groqClient;
 }
 
 // Gemini only for food image scanning (vision support)
@@ -288,6 +291,7 @@ exports.calculateAIWaterTarget = async (req, res, next) => {
       return next(new Error('Please provide weight (kg) and daily workout time (minutes)'));
     }
 
+    const groq = getGroq();
     if (!groq) {
       const { status, message } = getFriendlyAIError(new Error('api key missing'), 'hydration');
       res.status(status);

@@ -3,10 +3,13 @@ const User = require('../models/User');
 const Groq = require('groq-sdk');
 const { getFriendlyAIError } = require('../utils/aiErrorHelper');
 
-// Initialize Groq
-let groq = null;
-if (process.env.GROQ_API_KEY) {
-  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Initialize Groq dynamically
+let groqClient = null;
+function getGroq() {
+  if (!groqClient && process.env.GROQ_API_KEY) {
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groqClient;
 }
 
 // Log a completed workout
@@ -61,6 +64,7 @@ exports.generateWorkoutPlan = async (req, res, next) => {
 
     console.log(`Generating workout for user: Goal=${goalStr}, Level=${levelStr}, Time=${timeMinutes}m, Equipment=${equipList}`);
 
+    const groq = getGroq();
     if (!groq) {
       const { status, message } = getFriendlyAIError(new Error('api key missing'), 'workout');
       res.status(status);

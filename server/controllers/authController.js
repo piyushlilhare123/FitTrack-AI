@@ -2,10 +2,13 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const Groq = require('groq-sdk');
 
-// Initialize Groq
-let groq = null;
-if (process.env.GROQ_API_KEY) {
-  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Initialize Groq dynamically
+let groqClient = null;
+function getGroq() {
+  if (!groqClient && process.env.GROQ_API_KEY) {
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groqClient;
 }
 
 const generateToken = (id) => {
@@ -86,6 +89,7 @@ Guidelines:
   "waterTarget": number
 }`;
 
+  const groq = getGroq();
   if (groq) {
     try {
       const completion = await groq.chat.completions.create({

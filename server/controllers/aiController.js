@@ -10,9 +10,12 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 // Groq for text chat, voice, food search, hydration
-let groq = null;
-if (process.env.GROQ_API_KEY) {
-  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groqClient = null;
+function getGroq() {
+  if (!groqClient && process.env.GROQ_API_KEY) {
+    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groqClient;
 }
 
 // Gemini only for food image scanning (vision)
@@ -113,6 +116,7 @@ exports.sendMessage = async (req, res, next) => {
 
     let reply = '';
     try {
+      const groq = getGroq();
       if (!groq) throw new Error('Groq API key not configured');
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
@@ -286,6 +290,7 @@ exports.searchFoodText = async (req, res, next) => {
       throw new Error("Please provide food text to search");
     }
 
+    const groq = getGroq();
     if (!groq) {
       const { status, message } = getFriendlyAIError(new Error('api key missing'), 'nutrition');
       return res.status(status).json({ success: false, error: message });
