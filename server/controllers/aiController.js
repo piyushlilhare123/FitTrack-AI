@@ -124,9 +124,17 @@ exports.sendMessage = async (req, res, next) => {
           reply = "The AI generated an empty response. Please try again.";
         }
       } else if (response.status === 429) {
-        reply = "🤖 Our AI Coach has hit its daily limit. It'll be back after 12:30 PM IST — fresh and ready to help!";
+        // Check Retry-After header to distinguish per-minute throttle vs true daily limit
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '99999', 10);
+        const label = isVoice ? '🎤 AI Voice Coach' : '🤖 AI Coach';
+        if (retryAfter < 300) {
+          reply = `${label} is getting too many requests right now. Please wait 30 seconds and try again!`;
+        } else {
+          reply = `${label} has hit today's limit. It'll be back after 12:30 PM IST — fresh and ready!`;
+        }
       } else if (response.status === 503) {
-        reply = "🤖 AI Coach is handling peak traffic right now. Please wait a few seconds and send your message again!";
+        const label = isVoice ? '🎤 AI Voice Coach' : '🤖 AI Coach';
+        reply = `${label} is handling peak traffic right now. Please wait a few seconds and send your message again!`;
       } else {
         // Safely log the error without exposing raw text to users
         try { const errBody = await response.json(); console.error('Gemini API error:', errBody); } catch (_) {}
