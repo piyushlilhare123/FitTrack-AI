@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20-green?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.19-lightgrey?style=for-the-badge&logo=express)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
-[![GROK AI](https://img.shields.io/badge/Gemini_AI-2.5_Flash-8E75C2?style=for-the-badge&logo=googlegemini)](https://deepmind.google/technologies/gemini/)
+[![GROK AI](https://apix-drive.com/media/systems/en/grok_en_api.png)](https://console.groq.com/keys)
 [![Vapi AI](https://img.shields.io/badge/Voice_AI-Vapi-orange?style=for-the-badge)](https://vapi.ai/)
 
 FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness ecosystem designed to deliver a cinematic user experience. With a futuristic dark-mode UI, rich micro-animations, real-time voice coaching, and computer vision-based nutrition scanning, FitTrack AI goes beyond typical trackers to act as a virtual, desi personal trainer and dietician in your pocket.
