@@ -118,6 +118,14 @@ function getFriendlyAIError(err, section = 'nutrition') {
     msg.includes('rate limit') ||
     msg.includes('rate_limit')
   ) {
+    if (msg.includes('limit: 0') || msg.includes('limit:0') || msg.includes('limit is 0') || msg.includes('limit is: 0')) {
+      const emoji = section === 'workout' ? '🏋️' :
+                    section === 'nutrition' ? '🍎' :
+                    section === 'scanner' ? '📷' :
+                    section === 'hydration' ? '💧' :
+                    section === 'chat' ? '🤖' : '🎤';
+      return { status: 429, message: `${emoji} AI service is restricted by Google (Quota limit is 0). Please check your Google Cloud billing or create a new API key in Google AI Studio!` };
+    }
     if (isPerMinuteRateLimit(err)) {
       return { status: 429, message: msgs.rateLimit };
     }
