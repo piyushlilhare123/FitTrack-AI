@@ -250,24 +250,34 @@ exports.scanFood = async (req, res, next) => {
       throw new Error("Please provide an imageBase64 string");
     }
 
-    const promptText = `Analyze this food image and return ONLY a JSON object — no markdown, no backticks, no preamble.
+    const promptText = `Analyze this food image in detail. Identify all visible dishes, ingredients, or meal items.
+Return ONLY a valid JSON object — no markdown, no backticks, no preamble.
 
 Schema:
 {
-  "foodName": string,
-  "servingSize": string,
-  "calories": number,
+  "foodName": string (e.g., "Paneer Butter Masala & Naan", "Grilled Chicken Salad", "Pepperoni Pizza Slice"),
+  "servingSize": string (e.g., "1 plate", "250g", "1 bowl"),
+  "calories": number (estimated total calories),
   "macros": { "carbs": number, "protein": number, "fat": number, "fiber": number },
   "micros": [
-    { "label": string, "value": number, "unit": string, "daily": number }
+    { "label": "Calcium", "value": number, "unit": "mg", "daily": number },
+    { "label": "Iron", "value": number, "unit": "mg", "daily": number },
+    { "label": "Vitamin C", "value": number, "unit": "mg", "daily": number },
+    { "label": "Potassium", "value": number, "unit": "mg", "daily": number },
+    { "label": "Sodium", "value": number, "unit": "mg", "daily": number },
+    { "label": "Vitamin A", "value": number, "unit": "mcg", "daily": number },
+    { "label": "Magnesium", "value": number, "unit": "mg", "daily": number },
+    { "label": "Zinc", "value": number, "unit": "mg", "daily": number }
   ],
   "fitScore": number (0–100),
   "badge": string (one of: "very healthy", "high protein", "balanced", "high carb", "high fat", "light meal"),
-  "insight": string (2 sentences, fitness-focused)
+  "insight": string (2 sentences, fitness and health-focused insights on this meal)
 }
 
-micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
-All gram values should be realistic for a single serving. Return raw JSON only.`;
+Important Instructions:
+- Accurately estimate calories and macros based on typical portion sizes.
+- Always provide meaningful values for all 8 micro-nutrients.
+- Return raw JSON only.`;
 
     let textResponse = null;
 

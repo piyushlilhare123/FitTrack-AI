@@ -82,10 +82,41 @@ export default function NutritionScanner() {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        setImage(e.target.result as string);
-        setImageBase64((e.target.result as string).split(",")[1]);
+        const rawDataUrl = e.target.result as string;
+        setImage(rawDataUrl);
         setResult(null);
         setError(null);
+
+        // Compress image using Canvas for 10x faster processing
+        const img = new Image();
+        img.src = rawDataUrl;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_SIZE = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.75);
+            setImageBase64(compressedDataUrl.split(",")[1]);
+          } else {
+            setImageBase64(rawDataUrl.split(",")[1]);
+          }
+        };
       }
     };
     reader.readAsDataURL(file);
