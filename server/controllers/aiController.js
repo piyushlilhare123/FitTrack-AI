@@ -38,6 +38,28 @@ if (process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY) {
   nutritionGenAI = new GoogleGenerativeAI(process.env.GEMINI_NUTRITION_KEY || process.env.GEMINI_API_KEY);
 }
 
+// OpenRouter for Vision Food Scanning (Free, No Credit Card required)
+let openrouterClient = null;
+function getOpenRouter() {
+  if (!openrouterClient && process.env.OPENROUTER_API_KEY) {
+    openrouterClient = new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY,
+      defaultHeaders: {
+        'HTTP-Referer': 'http://localhost:3000',
+        'X-Title': 'FitTrack AI',
+      }
+    });
+  }
+  return openrouterClient;
+}
+
+const OPENROUTER_VISION_MODELS = [
+  'google/gemma-4-26b-a4b-it:free',
+  'nvidia/nemotron-nano-12b-v2-vl:free',
+  'openrouter/free'
+];
+
 exports.getAllConversations = async (req, res, next) => {
   try {
     const conversations = await ChatConversation.find({ userId: req.user.id })
@@ -228,15 +250,6 @@ exports.scanFood = async (req, res, next) => {
       throw new Error("Please provide an imageBase64 string");
     }
 
-    if (!nutritionGenAI) {
-      const { status, message } = getFriendlyAIError(new Error('api key missing'), 'scanner');
-      return res.status(status).json({ success: false, error: message });
-    }
-
-    const mimeType = imageBase64.startsWith("data:image/png") ? "image/png" : "image/jpeg";
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-    const imageParts = [{ inlineData: { data: base64Data, mimeType } }];
-
     const promptText = `Analyze this food image and return ONLY a JSON object — no markdown, no backticks, no preamble.
 
 Schema:
@@ -256,26 +269,67 @@ Schema:
 micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
 All gram values should be realistic for a single serving. Return raw JSON only.`;
 
-    const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    let textResponse = null;
 
-    let textResponse = "{}";
-    try {
-      const result = await model.generateContent([promptText, ...imageParts]);
-      const response = await result.response;
-      textResponse = response.text() || "{}";
-    } catch (firstErr) {
-      console.warn("First attempt failed in scanFood, retrying in 2s:", firstErr.message);
-      // Wait 2s and retry once automatically
-      await new Promise(r => setTimeout(r, 2000));
+    // 1. Try OpenRouter Free Vision first (Zero Credit Card Required)
+    const openrouter = getOpenRouter();
+    if (openrouter) {
+      const imageUrl = imageBase64.startsWith("data:image") ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+      for (const model of OPENROUTER_VISION_MODELS) {
+        try {
+          const completion = await openrouter.chat.completions.create({
+            model,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: promptText },
+                  { type: "image_url", image_url: { url: imageUrl } }
+                ]
+              }
+            ],
+            temperature: 0.2
+          });
+          const resText = completion.choices[0]?.message?.content || "";
+          if (resText.trim()) {
+            textResponse = resText;
+            console.log(`Food Scanner successfully processed via OpenRouter model: ${model}`);
+            break;
+          }
+        } catch (orErr) {
+          console.warn(`OpenRouter Vision model ${model} failed:`, orErr.message);
+        }
+      }
+    }
+
+    // 2. Fallback to Gemini if OpenRouter didn't return a response
+    if (!textResponse && nutritionGenAI) {
+      const mimeType = imageBase64.startsWith("data:image/png") ? "image/png" : "image/jpeg";
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+      const imageParts = [{ inlineData: { data: base64Data, mimeType } }];
+
       try {
+        const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await model.generateContent([promptText, ...imageParts]);
         const response = await result.response;
         textResponse = response.text() || "{}";
-      } catch (apiError) {
-        console.error("Gemini Scan Food Error after retry:", apiError);
-        const { status, message } = getFriendlyAIError(apiError, "scanner");
-        return res.status(status).json({ success: false, error: message });
+      } catch (firstErr) {
+        console.warn("First attempt failed in Gemini scanFood, retrying in 2s:", firstErr.message);
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const model = nutritionGenAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+          const result = await model.generateContent([promptText, ...imageParts]);
+          const response = await result.response;
+          textResponse = response.text() || "{}";
+        } catch (apiError) {
+          console.error("Gemini Scan Food Error after retry:", apiError);
+        }
       }
+    }
+
+    if (!textResponse) {
+      const { status, message } = getFriendlyAIError(new Error('All vision providers busy'), 'scanner');
+      return res.status(status).json({ success: false, error: message });
     }
     
     textResponse = textResponse.replace(/```json|```/g, "").trim();
