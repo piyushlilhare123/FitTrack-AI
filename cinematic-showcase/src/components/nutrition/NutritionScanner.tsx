@@ -72,6 +72,7 @@ export default function NutritionScanner() {
   const [image, setImage] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [portionMultiplier, setPortionMultiplier] = useState(1.0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -85,6 +86,7 @@ export default function NutritionScanner() {
         const rawDataUrl = e.target.result as string;
         setImage(rawDataUrl);
         setResult(null);
+        setPortionMultiplier(1.0);
         setError(null);
 
         // Compress image using Canvas for 10x faster processing
@@ -137,6 +139,7 @@ export default function NutritionScanner() {
     try {
       const response = await api.post("/api/ai/scan-food", { imageBase64 });
       setResult(response.data.nutritionData);
+      setPortionMultiplier(1.0);
     } catch (err: any) {
       if (err.response?.status === 429) {
         setError(err.response?.data?.error || err.response?.data?.message || "API Limit Reached: Please wait 60 seconds, or you may have hit the daily Free Tier limit.");
@@ -149,6 +152,21 @@ export default function NutritionScanner() {
   };
 
   const badge = result ? (BADGE_MAP[result.badge?.toLowerCase()] || BADGE_MAP["balanced"]) : null;
+
+  // Calculate scaled nutrition values according to portion quantity
+  const scaledCalories = Math.round((result?.calories || 0) * portionMultiplier);
+  const scaledCarbs = Math.round(((result?.macros?.carbs || 0) * portionMultiplier) * 10) / 10;
+  const scaledProtein = Math.round(((result?.macros?.protein || 0) * portionMultiplier) * 10) / 10;
+  const scaledFat = Math.round(((result?.macros?.fat || 0) * portionMultiplier) * 10) / 10;
+  const scaledFiber = Math.round(((result?.macros?.fiber || 0) * portionMultiplier) * 10) / 10;
+
+  const baseWeight = result?.weightGrams || parseInt(result?.servingSize?.match(/\d+/)?.[0] || "200", 10);
+  const scaledWeight = Math.round(baseWeight * portionMultiplier);
+
+  const scaledMicros = result?.micros?.map((m: any) => ({
+    ...m,
+    value: Math.round(m.value * portionMultiplier * 10) / 10
+  }));
 
   return (
     <div style={{ background: "transparent", color: TEXT, fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
@@ -249,10 +267,10 @@ export default function NutritionScanner() {
         {result && (
           <div style={{ animation: "fadeIn 0.4s ease" }}>
             {/* Food name + badge */}
-            <div style={{ display: "flex", justifyItems: "center", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", justifyItems: "center", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{result.foodName}</h2>
-                <div style={{ color: MUTED, fontSize: 13, marginTop: 3 }}>Serving: {result.servingSize}</div>
+                <div style={{ color: MUTED, fontSize: 13, marginTop: 3 }}>Base Portion: {result.servingSize}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {badge && (
@@ -267,24 +285,81 @@ export default function NutritionScanner() {
               </div>
             </div>
 
-            {/* Macro Stats */}
+            {/* Interactive Portion Quantity Scaler */}
+            <div style={{ background: SURFACE, border: `1px solid ${ACCENT}40`, borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>
+                  ⚖️ Exact Quantity: <span style={{ color: ACCENT, fontSize: 15, fontWeight: 800 }}>{scaledWeight}g</span>
+                  <span style={{ fontSize: 12, color: MUTED, marginLeft: 6 }}>({portionMultiplier}x portion)</span>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[0.5, 1.0, 1.5, 2.0].map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setPortionMultiplier(m)}
+                      style={{
+                        background: portionMultiplier === m ? ACCENT : SURFACE2,
+                        color: portionMultiplier === m ? "#000" : TEXT,
+                        border: `1px solid ${portionMultiplier === m ? ACCENT : BORDER}`,
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {m}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button
+                  onClick={() => setPortionMultiplier(p => Math.max(0.25, +(p - 0.25).toFixed(2)))}
+                  style={{ background: SURFACE2, border: `1px solid ${BORDER}`, color: TEXT, borderRadius: 6, width: 32, height: 32, fontSize: 16, fontWeight: 700, cursor: "pointer" }}
+                >
+                  -
+                </button>
+                <div style={{ flex: 1, textAlign: "center" }}>
+                  <input
+                    type="range"
+                    min="0.25"
+                    max="3.0"
+                    step="0.05"
+                    value={portionMultiplier}
+                    onChange={(e) => setPortionMultiplier(parseFloat(e.target.value))}
+                    style={{ width: "100%", accentColor: ACCENT, cursor: "pointer" }}
+                  />
+                </div>
+                <button
+                  onClick={() => setPortionMultiplier(p => +(p + 0.25).toFixed(2))}
+                  style={{ background: SURFACE2, border: `1px solid ${BORDER}`, color: TEXT, borderRadius: 6, width: 32, height: 32, fontSize: 16, fontWeight: 700, cursor: "pointer" }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Scaled Macro Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
-              <StatCard label="Calories" value={result.calories} unit="kcal" highlight />
-              <StatCard label="Protein" value={`${result.macros.protein}g`} />
-              <StatCard label="Carbs" value={`${result.macros.carbs}g`} />
-              <StatCard label="Fat" value={`${result.macros.fat}g`} />
+              <StatCard label="Calories" value={scaledCalories} unit="kcal" highlight />
+              <StatCard label="Protein" value={`${scaledProtein}g`} />
+              <StatCard label="Carbs" value={`${scaledCarbs}g`} />
+              <StatCard label="Fat" value={`${scaledFat}g`} />
             </div>
 
-            {/* Macro Bar */}
+            {/* Scaled Macro Bar */}
             <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Macronutrient Breakdown</div>
-              <MacroBar {...result.macros} />
+              <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Macronutrient Breakdown ({scaledWeight}g)</div>
+              <MacroBar carbs={scaledCarbs} protein={scaledProtein} fat={scaledFat} fiber={scaledFiber} />
             </div>
 
-            {/* Micros */}
+            {/* Scaled Micros */}
             <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 14 }}>Micronutrients · % Daily Value</div>
-              {result.micros?.map((m: any, i: number) => <MicroBar key={i} {...m} />)}
+              <div style={{ fontSize: 12, color: MUTED, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 14 }}>Micronutrients · % Daily Value ({scaledWeight}g)</div>
+              {scaledMicros?.map((m: any, i: number) => <MicroBar key={i} {...m} />)}
             </div>
 
             {/* Insight */}

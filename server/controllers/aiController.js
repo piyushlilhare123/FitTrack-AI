@@ -256,8 +256,9 @@ Return ONLY a valid JSON object — no markdown, no backticks, no preamble.
 Schema:
 {
   "foodName": string (e.g., "Paneer Butter Masala & Naan", "Grilled Chicken Salad", "Pepperoni Pizza Slice"),
-  "servingSize": string (e.g., "1 plate", "250g", "1 bowl"),
-  "calories": number (estimated total calories),
+  "servingSize": string (e.g., "1 plate (250g)", "1 bowl (200g)", "2 Slice (180g)"),
+  "weightGrams": number (e.g., 250),
+  "calories": number (estimated total calories for this serving),
   "macros": { "carbs": number, "protein": number, "fat": number, "fiber": number },
   "micros": [
     { "label": "Calcium", "value": number, "unit": "mg", "daily": number },
