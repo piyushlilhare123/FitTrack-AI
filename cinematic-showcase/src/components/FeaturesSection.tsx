@@ -19,7 +19,7 @@ const features = [
   {
     id: 2,
     title: 'AI Workout Planner',
-    subtitle: 'GEMINI ENGINE',
+    subtitle: 'GROQ ENGINE',
     description: 'Generate hyper-personalized workout plans based on your exact available equipment, time, and fitness level instantly.',
     gridSpan: 'md:col-span-1 md:row-span-1',
     icon: (

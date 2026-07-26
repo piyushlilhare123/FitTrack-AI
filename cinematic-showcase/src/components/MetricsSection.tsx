@@ -39,7 +39,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 const metricsList: MetricCardProps[] = [
   {
     value: 10,
-    suffix: 'K+',
+    suffix: '+',
     label: 'Active Athletes',
     description: 'Relying on FitTrack daily'
   },
@@ -51,7 +51,7 @@ const metricsList: MetricCardProps[] = [
   },
   {
     value: 50,
-    suffix: 'M+',
+    suffix: '+',
     label: 'Workouts Completed',
     description: 'Logged and analyzed routines'
   },
