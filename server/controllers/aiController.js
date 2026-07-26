@@ -276,6 +276,7 @@ Schema:
 }
 
 Important Instructions:
+- "weightGrams" MUST be a realistic estimated weight in grams for the item/serving (e.g. 150 for a slice of cake, 250 for a plate, 200 for a bowl, 180 for 2 slices). NEVER return 1 or single-digit numbers for weightGrams.
 - Accurately estimate calories and macros based on typical portion sizes.
 - Always provide meaningful values for all 8 micro-nutrients.
 - Return raw JSON only.`;

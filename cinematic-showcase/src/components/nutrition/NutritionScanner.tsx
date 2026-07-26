@@ -160,7 +160,13 @@ export default function NutritionScanner() {
   const scaledFat = Math.round(((result?.macros?.fat || 0) * portionMultiplier) * 10) / 10;
   const scaledFiber = Math.round(((result?.macros?.fiber || 0) * portionMultiplier) * 10) / 10;
 
-  const baseWeight = result?.weightGrams || parseInt(result?.servingSize?.match(/\d+/)?.[0] || "200", 10);
+  // Extract realistic base weight in grams (prevents "1 slice" from evaluating to 1 gram)
+  const rawGramMatch = result?.servingSize?.match(/(\d+)\s*g/i);
+  const parsedGramsFromServing = rawGramMatch ? parseInt(rawGramMatch[1], 10) : 0;
+  const baseWeight = (result?.weightGrams && result.weightGrams >= 20)
+    ? result.weightGrams
+    : (parsedGramsFromServing >= 20 ? parsedGramsFromServing : 250);
+
   const scaledWeight = Math.round(baseWeight * portionMultiplier);
 
   const scaledMicros = result?.micros?.map((m: any) => ({
@@ -287,11 +293,38 @@ export default function NutritionScanner() {
 
             {/* Interactive Portion Quantity Scaler */}
             <div style={{ background: SURFACE, border: `1px solid ${ACCENT}40`, borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>
-                  ⚖️ Exact Quantity: <span style={{ color: ACCENT, fontSize: 15, fontWeight: 800 }}>{scaledWeight}g</span>
-                  <span style={{ fontSize: 12, color: MUTED, marginLeft: 6 }}>({portionMultiplier}x portion)</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>⚖️ Exact Quantity:</span>
+                  <div style={{ display: "inline-flex", alignItems: "center", background: SURFACE2, border: `1px solid ${ACCENT}80`, borderRadius: 8, padding: "3px 10px" }}>
+                    <input
+                      type="number"
+                      min="10"
+                      max="5000"
+                      value={scaledWeight}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) {
+                          setPortionMultiplier(+(val / baseWeight).toFixed(3));
+                        }
+                      }}
+                      style={{
+                        width: 55,
+                        background: "transparent",
+                        border: "none",
+                        color: ACCENT,
+                        fontSize: 16,
+                        fontWeight: 800,
+                        fontFamily: "monospace",
+                        textAlign: "right",
+                        outline: "none"
+                      }}
+                    />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: ACCENT, marginLeft: 3 }}>g</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: MUTED }}>({portionMultiplier}x)</span>
                 </div>
+
                 <div style={{ display: "flex", gap: 6 }}>
                   {[0.5, 1.0, 1.5, 2.0].map(m => (
                     <button
