@@ -19,7 +19,7 @@ const features = [
   {
     id: 2,
     title: 'AI Workout Planner',
-    subtitle: 'GROK ENGINE',
+    subtitle: 'GROQ ENGINE',
     description: 'Generate hyper-personalized workout plans based on your exact available equipment, time, and fitness level instantly.',
     gridSpan: 'md:col-span-1 md:row-span-1',
     icon: (
@@ -91,17 +91,17 @@ export default function FeaturesSection() {
 
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: [0.25, 1, 0.5, 1] as const } 
+      transition: { duration: 0.6, ease: [0.25, 1, 0.5, 1] as const }
     }
   };
 
   return (
     <section id="features" className="py-32 px-6 bg-[#050510] relative z-20 flex justify-center border-t border-[rgba(255,255,255,0.03)]">
       <div className="w-full max-w-5xl">
-        
+
         {/* Section Header */}
         <div className="mb-16 text-center md:text-left">
           <span className="text-cyan text-xs font-semibold uppercase tracking-[0.25em] font-body">
@@ -116,7 +116,7 @@ export default function FeaturesSection() {
         </div>
 
         {/* Bento Grid */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
