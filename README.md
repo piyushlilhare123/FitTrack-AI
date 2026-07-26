@@ -26,8 +26,8 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 ### 🎙️ 2. Real-Time Voice Coach (Vapi AI)
 * **Interactive Speech Assistant**: Powered by `@vapi-ai/web`, allowing users to talk directly to their fitness coach via natural speech on web and mobile devices.
 
-### 🥦 3. AI Food Photo Scanner (OpenRouter Vision & Gemini Vision)
-* **Dual Vision AI Pipeline**: Uses OpenRouter Free Vision (`google/gemma-4-26b-a4b-it:free`, `nvidia/nemotron-nano-12b-v2-vl:free`) with automatic 2-second retry and fallback to Google Gemini (`gemini-2.0-flash`).
+### 🥦 3. AI Food Photo Scanner (OpenRouter Vision Engine)
+* **OpenRouter Vision Pipeline**: Powered by OpenRouter Free Vision models (`google/gemma-4-26b-a4b-it:free`, `nvidia/nemotron-nano-12b-v2-vl:free`) for 100% free, cardless photo scanning with automatic fallback to Gemini Vision.
 * **Client-Side Canvas Compression**: Automatically resizes uploaded food photos to max 800px at 0.75 JPEG quality before transmission (reducing payload size from 10MB to ~150KB for **10x faster uploads**).
 * **Interactive Portion Scaler & Editable Gram Input**: Allows users to select quick multipliers (`0.5x`, `1.0x`, `1.5x`, `2.0x`) or directly type custom gram weights (e.g. `250g`, `300g`, `500g`) with instant real-time recalculation of calories, carbs, protein, fat, fiber, and 8 micro-nutrients!
 

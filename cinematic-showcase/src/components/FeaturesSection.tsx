@@ -31,7 +31,7 @@ const features = [
   {
     id: 3,
     title: 'AI Nutrition Scanner',
-    subtitle: 'PHOTO ANALYSIS',
+    subtitle: 'OPENROUTER VISION',
     description: 'Snap a picture of your food. Our vision AI instantly analyzes the image to estimate calories and extract detailed macros automatically.',
     gridSpan: 'md:col-span-1 md:row-span-1',
     icon: (
