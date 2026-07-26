@@ -3,41 +3,41 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-20-green?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.19-lightgrey?style=for-the-badge&logo=express)](https://expressjs.com/)
+[![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-orange?style=for-the-badge)](https://groq.com/)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-Free_Vision-purple?style=for-the-badge)](https://openrouter.ai/)
+[![Gemini API](https://img.shields.io/badge/Gemini-2.0_Flash-blue?style=for-the-badge&logo=google)](https://ai.google.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
-[![GROK AI](https://apix-drive.com/media/systems/en/grok_en_api.png)](https://console.groq.com/docs/overview)
-[![Vapi AI](https://img.shields.io/badge/Voice_AI-Vapi-orange?style=for-the-badge)](https://vapi.ai/)
+[![Vapi AI](https://img.shields.io/badge/Voice_AI-Vapi-red?style=for-the-badge)](https://vapi.ai/)
 
-FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness ecosystem designed to deliver a cinematic user experience. With a futuristic dark-mode UI, rich micro-animations, real-time voice coaching, and computer vision-based nutrition scanning, FitTrack AI goes beyond typical trackers to act as a virtual, desi personal trainer and dietician in your pocket.
+FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness ecosystem designed to deliver a cinematic user experience. Built with a futuristic dark-mode UI, rich micro-animations, real-time voice coaching, and computer vision-based nutrition scanning, FitTrack AI acts as a virtual, desi personal trainer and dietician right in your pocket.
+
+🌐 **Live Website**: [fit-track-ai-three.vercel.app](https://fit-track-ai-three.vercel.app/)
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Features & AI Innovations
 
-### 🎙️ 1. Voice & Text AI Coach (Vapi & Gemini)
-* **Interactive Voice Assistant**: Powered by `@vapi-ai/web`, allowing users to talk directly to their coach via natural speech on mobile and web platforms.
-* **Friendly Hinglish Persona**: The AI speaks in a warm, energetic, Hinglish coaching style (e.g., *"Bhai, aaj ka plan ready hai!"*), mimicking a local personal trainer.
-* **Culturally Aware Advice**: Recommends Indian food alternatives (e.g., paneer, dal, besan chilla, sattu, Rohu fish) and custom workouts tailored to home gym or minimal equipment configurations.
-* **Math-Backed Coaching**: Performs precise TDEE calculations (Mifflin-St Jeor formula) and macro breakdowns (fat loss vs. muscle gain).
+### 🤖 1. Groq-Powered AI Coach & Workout Engine (`Llama 3.3 70B`)
+* **Ultra-Fast Performance**: All text-based AI features run on Groq’s ultra-fast LPU inference engine (`llama-3.3-70b-versatile` with 14,400 requests/day limit), responding in under 0.3 seconds.
+* **Automatic Failover Architecture**: If the primary 70B model reaches token limits, the backend silently fails over to `llama-3.1-8b-instant` (<0.2s latency) for zero service interruption.
+* **Friendly Hinglish Persona**: The AI speaks in a warm, energetic, Hinglish coaching style (*"Bhai, aaj ka workout ready hai!"*).
+* **Culturally Aware Nutrition & Workouts**: Tailors advice around Indian diets (paneer, besan chilla, sattu, dal, eggs) and custom workouts for home or gym setups.
 
-### 🥦 2. AI Nutrition Scanner (Gemini Vision)
-* **Food Recognition**: Upload or drag-and-drop a photo of any meal.
-* **Macronutrient Breakdown**: The vision model parses the image and instantly outputs estimated grams and percentages of carbohydrates, proteins, fats, and fiber.
-* **Health Scoring & Badges**: Categorizes meals into smart badges like *Very Healthy*, *High Protein*, *Balanced*, *High Carb*, or *High Fat*.
+### 🎙️ 2. Real-Time Voice Coach (Vapi AI)
+* **Interactive Speech Assistant**: Powered by `@vapi-ai/web`, allowing users to talk directly to their fitness coach via natural speech on web and mobile devices.
 
-### 🏋️ 3. Hyper-Personalized Workout Planner
-* Generates custom routines based on equipment, fitness level, time, and target muscle groups.
-* Integrates seamlessly with active trackers to record sets, reps, and cardiovascular volume.
+### 🥦 3. AI Food Photo Scanner (OpenRouter Vision & Gemini Vision)
+* **Dual Vision AI Pipeline**: Uses OpenRouter Free Vision (`google/gemma-4-26b-a4b-it:free`, `nvidia/nemotron-nano-12b-v2-vl:free`) with automatic 2-second retry and fallback to Google Gemini (`gemini-2.0-flash`).
+* **Client-Side Canvas Compression**: Automatically resizes uploaded food photos to max 800px at 0.75 JPEG quality before transmission (reducing payload size from 10MB to ~150KB for **10x faster uploads**).
+* **Interactive Portion Scaler & Editable Gram Input**: Allows users to select quick multipliers (`0.5x`, `1.0x`, `1.5x`, `2.0x`) or directly type custom gram weights (e.g. `250g`, `300g`, `500g`) with instant real-time recalculation of calories, carbs, protein, fat, fiber, and 8 micro-nutrients!
 
-### 📊 4. Cinematic Interactive Dashboard
-* **Dynamic Canvas Backgrounds**: High-fidelity scrolling canvas animations (`ScrollCanvas.tsx`) that bring the application to life.
-* **Advanced Progress Analytics**: Interactive weight, calorie, and workout consistency tracking powered by **Recharts**.
-* **Gamified Experience**: Includes a **Trophy Room** for unlocked consistency badges, milestones, and streak shields.
+### 💧 4. AI Hydration Advisor & Profile Goal Calculator
+* Calculates daily water intake targets based on body weight, climate, and exercise intensity.
+* Mifflin-St Jeor TDEE formula calculations for personalized calorie targets (fat loss vs. muscle gain).
 
-### 🔒 5. Secure Sync & Database Fallbacks
-* JWT-based token authentication for private biometric data.
-* **Smart DB Connection Fallback**: If the server fails to connect to MongoDB Atlas (e.g., due to IP whitelisting issues), it automatically spins up an **in-memory database** (`mongodb-memory-server`) so testing and demos can run completely uninterrupted.
+### 🛡️ 5. Unified Friendly Emoji Error Shield
+* Built-in error classification (`aiErrorHelper.js`) catches rate limits, quota limits, per-minute throttles, and 503 traffic spikes.
+* Shields users from raw API tracebacks by rendering friendly, emoji-rich notification toasts.
 
 ---
 
@@ -49,17 +49,15 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 * **Animations**: Framer Motion, HTML5 Canvas
 * **State Management**: Zustand
 * **Charts & Visuals**: Recharts, Lucide Icons
-* **Real-time Voice**: `@vapi-ai/web` SDK
+* **Real-Time Voice**: `@vapi-ai/web` SDK
 * **Notifications**: React Hot Toast
 
 ### Backend (Express API Server)
 * **Runtime**: Node.js & Express
-* **Database**: MongoDB (Mongoose ODM)
-* **In-Memory Db (Fallback)**: `mongodb-memory-server`
+* **Database**: MongoDB (Mongoose ODM) & `mongodb-memory-server` (In-memory DB fallback)
+* **AI SDKs**: `groq-sdk`, OpenAI SDK (OpenRouter Vision), `@google/generative-ai`
 * **Authentication**: JWT, bcryptjs
-* **File Uploads**: Multer
-* **AI Services**: Google Generative AI (`@google/generative-ai` for Vision) & direct Gemini Rest API integrations
-* **Security & Traffic**: Helmet (CORS configurations), Express Rate Limit, Morgan logger
+* **Security & Traffic**: Express Rate Limit, Helmet CORS configurations, Morgan logger
 
 ---
 
@@ -69,34 +67,28 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 ├── cinematic-showcase/          # Next.js 15 Frontend Client
 │   ├── public/                  # Static assets & favicon
 │   └── src/
-│       ├── app/                 # App Router (dashboard, login, register, etc.)
-│       ├── components/          # React components
-│       │   ├── charts/          # Progress graphs
+│       ├── app/                 # Next.js App Router (dashboard, coach, progress, login, etc.)
+│       ├── components/          # React UI components
+│       │   ├── charts/          # Progress graphs & Recharts visualizers
 │       │   ├── dashboard/       # Stat cards & schedule rows
 │       │   ├── layout/          # Topbar & Sidebar navigation
-│       │   ├── nutrition/       # Gemini AI Nutrition Scanner
-│       │   └── ui/              # Modal, Card reusables
+│       │   ├── nutrition/       # AI Food Photo Scanner & Portion Scaler
+│       │   └── ui/              # Modal, Card, & Glassmorphism components
 │       ├── lib/                 # Axios API configuration & utilities
 │       └── store/               # Zustand state stores
 │
 ├── server/                      # Node.js Express Backend Server
-│   ├── controllers/             # Request handlers (AI, auth, workouts, nutrition)
+│   ├── controllers/             # Request handlers (aiController, workoutController, nutritionController, authController)
 │   ├── middleware/              # JWT verification, rate limiter, error handling
 │   ├── models/                  # Mongoose MongoDB schemas
 │   ├── routes/                  # REST endpoints
-│   ├── uploads/                 # Temporary stored user images
+│   ├── utils/                   # AI Error Helper & central utilities
 │   └── server.js                # Server entry point
 │
-├── fitness.tsx                  # Framer Rolling Text component
-├── fitness2.tsx                 # Framer Circular Progress component
-└── README.md                    # Main documentation
+└── README.md                    # Project documentation
 ```
 
 ---
-
-## 🚀 Getting Started
- live link of website :- https://fit-track-ai-three.vercel.app/
-
 
 ## ⚡ API Endpoints
 
@@ -106,21 +98,58 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 * `GET /api/auth/profile` - Fetch biometric & user settings
 
 ### 🤖 AI Engine (`/api/ai`)
-* `POST /api/ai/chat/:id` - Chat with Hinglish FitCoach AI
-* `POST /api/ai/scan-food` - Upload image for Gemini macro analysis
+* `POST /api/ai/chat/:id` - Chat with Hinglish FitCoach AI (Groq Llama 3.3 70B)
+* `POST /api/ai/scan-food` - Food photo macro & micro analysis (OpenRouter & Gemini Vision)
+* `POST /api/ai/search-food-text` - Food text search & calorie lookup
 
-### 🥗 Trackers (`/api/...`)
-* `GET/POST /api/workouts` - Read/Write workouts logs
-* `GET/POST /api/nutrition` - Log meals & track daily macro targets
-* `GET/POST /api/progress` - Save bodyweight, stats, and milestones
-* `GET/POST /api/feed` - Read community feed & posts
+### 🏋️ Workouts (`/api/workouts`)
+* `POST /api/workouts/generate` - AI Custom Workout Planner
+* `GET/POST /api/workouts` - Read and log completed workout routines
 
----
-
-## 🎨 UI & UX Features
-* **Rich Glassmorphism**: Tailored HSL dark palettes combined with semi-transparent backdrops (`bg-[#161A22]`).
-* **Micro-Animations**: Hover transitions, card tilt shadows, and Canvas particles that make the site feel alive.
-* **Responsive Layouts**: Fully adaptive dashboards designed to look excellent on both standard computer screens and mobile displays.
+### 🥗 Nutrition & Hydration (`/api/nutrition`)
+* `GET/POST /api/nutrition` - Meal logging & macro target tracking
+* `POST /api/nutrition/hydration` - AI Hydration Advisor calculation
 
 ---
 
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/piyushlilhare123/FitTrack-AI.git
+cd FitTrack-AI
+```
+
+### 2. Install Dependencies
+```bash
+# Install Server Dependencies
+cd server
+npm install
+
+# Install Client Dependencies
+cd ../cinematic-showcase
+npm install
+```
+
+### 3. Set Up Environment Variables (`server/.env`)
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GROQ_API_KEY=your_groq_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+GEMINI_NUTRITION_KEY=your_gemini_api_key
+```
+
+### 4. Run Development Servers
+```bash
+# Start Backend (Terminal 1)
+cd server
+npm run dev
+
+# Start Frontend (Terminal 2)
+cd cinematic-showcase
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view FitTrack AI in action! ⚡
