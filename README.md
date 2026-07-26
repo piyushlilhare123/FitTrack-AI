@@ -5,13 +5,10 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-orange?style=for-the-badge)](https://groq.com/)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free_Vision-purple?style=for-the-badge)](https://openrouter.ai/)
-[![Gemini API](https://img.shields.io/badge/Gemini-2.0_Flash-blue?style=for-the-badge&logo=google)](https://ai.google.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
 [![Vapi AI](https://img.shields.io/badge/Voice_AI-Vapi-red?style=for-the-badge)](https://vapi.ai/)
 
 FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness ecosystem designed to deliver a cinematic user experience. Built with a futuristic dark-mode UI, rich micro-animations, real-time voice coaching, and computer vision-based nutrition scanning, FitTrack AI acts as a virtual, desi personal trainer and dietician right in your pocket.
-
-🌐 **Live Website**: [fit-track-ai-three.vercel.app](https://fit-track-ai-three.vercel.app/)
 
 ---
 
@@ -27,7 +24,7 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 * **Interactive Speech Assistant**: Powered by `@vapi-ai/web`, allowing users to talk directly to their fitness coach via natural speech on web and mobile devices.
 
 ### 🥦 3. AI Food Photo Scanner (OpenRouter Vision Engine)
-* **OpenRouter Vision Pipeline**: Powered by OpenRouter Free Vision models (`google/gemma-4-26b-a4b-it:free`, `nvidia/nemotron-nano-12b-v2-vl:free`) for 100% free, cardless photo scanning with automatic fallback to Gemini Vision.
+* **OpenRouter Vision Pipeline**: Powered by OpenRouter Free Vision models (`google/gemma-4-26b-a4b-it:free`, `nvidia/nemotron-nano-12b-v2-vl:free`) for 100% free.
 * **Client-Side Canvas Compression**: Automatically resizes uploaded food photos to max 800px at 0.75 JPEG quality before transmission (reducing payload size from 10MB to ~150KB for **10x faster uploads**).
 * **Interactive Portion Scaler & Editable Gram Input**: Allows users to select quick multipliers (`0.5x`, `1.0x`, `1.5x`, `2.0x`) or directly type custom gram weights (e.g. `250g`, `300g`, `500g`) with instant real-time recalculation of calories, carbs, protein, fat, fiber, and 8 micro-nutrients!
 
@@ -56,7 +53,7 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 * **Runtime**: Node.js & Express
 * **Database**: MongoDB (Mongoose ODM) & `mongodb-memory-server` (In-memory DB fallback)
 * **AI SDKs**: `groq-sdk`, OpenAI SDK (OpenRouter Vision), `@google/generative-ai`
-* **Authentication**: JWT, bcryptjs
+* **Authentication**: JWT, bcryptjs(used hashing ) .
 * **Security & Traffic**: Express Rate Limit, Helmet CORS configurations, Morgan logger
 
 ---
@@ -88,8 +85,8 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 └── README.md                    # Project documentation
 ```
 
+🌐 **Live Website**: [fit-track-ai-three.vercel.app](https://fit-track-ai-three.vercel.app/)
 ---
-
 ## ⚡ API Endpoints
 
 ### 🔐 Authentication (`/api/auth`)
@@ -99,7 +96,7 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 
 ### 🤖 AI Engine (`/api/ai`)
 * `POST /api/ai/chat/:id` - Chat with Hinglish FitCoach AI (Groq Llama 3.3 70B)
-* `POST /api/ai/scan-food` - Food photo macro & micro analysis (OpenRouter & Gemini Vision)
+* `POST /api/ai/scan-food` - Food photo macro & micro analysis (OpenRouter vision)
 * `POST /api/ai/search-food-text` - Food text search & calorie lookup
 
 ### 🏋️ Workouts (`/api/workouts`)
@@ -111,45 +108,3 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 * `POST /api/nutrition/hydration` - AI Hydration Advisor calculation
 
 ---
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/piyushlilhare123/FitTrack-AI.git
-cd FitTrack-AI
-```
-
-### 2. Install Dependencies
-```bash
-# Install Server Dependencies
-cd server
-npm install
-
-# Install Client Dependencies
-cd ../cinematic-showcase
-npm install
-```
-
-### 3. Set Up Environment Variables (`server/.env`)
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-GROQ_API_KEY=your_groq_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key
-GEMINI_NUTRITION_KEY=your_gemini_api_key
-```
-
-### 4. Run Development Servers
-```bash
-# Start Backend (Terminal 1)
-cd server
-npm run dev
-
-# Start Frontend (Terminal 2)
-cd cinematic-showcase
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view FitTrack AI in action! ⚡
