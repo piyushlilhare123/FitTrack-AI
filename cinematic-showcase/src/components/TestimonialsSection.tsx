@@ -13,43 +13,43 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     quote: "The real-time motion tracking is game-changing. I fixed my squat hip shift within a single week of training.",
-    author: "Marcus Vance",
-    role: "Competitive Powerlifter",
+    author: "Lalita Nagpure",
+    role: "House Wife",
     avatar: "🏋️‍♂️",
     rating: 5
   },
   {
     quote: "FitTrack feels like it was engineered by kinesiologists, not just software devs. The biomechanics feedback is spot on.",
-    author: "Dr. Sarah Lin",
-    role: "Sports Medicine Specialist",
+    author: "Dr.Rahul",
+    role: "Physiotherapist",
     avatar: "🏃‍♀️",
     rating: 5
   },
   {
     quote: "My current streak is at 42 days. The streak shield saved my consistency records twice during heavy travel weeks.",
-    author: "Ethan Ross",
-    role: "Tech Executive",
+    author: "Sonu Nagpure",
+    role: "Social Media Influencer",
     avatar: "💼",
     rating: 5
   },
   {
     quote: "This is hands-down the most gorgeous fitness app UI on the market. The transitions make tracking workouts actually fun.",
-    author: "Mia Takahashi",
-    role: "Product Designer",
+    author: "Adarsh",
+    role: "Student",
     avatar: "🎨",
     rating: 5
   },
   {
     quote: "Clean code philosophy visible in the product. Minimalist, high performance, dark mode native. Perfection.",
-    author: "David Wright",
-    role: "Lead Software Architect",
+    author: "Phuspa ",
+    role: "School teacher",
     avatar: "💻",
     rating: 5
   },
   {
     quote: "The recovery-based routine generator adapts to my heart rate data instantly. My fatigue levels have dropped 30%.",
-    author: "Elena Guseva",
-    role: "Triathlete",
+    author: "Ayush Lilhare",
+    role: "Collage student ",
     avatar: "🚴‍♀️",
     rating: 5
   }
@@ -85,7 +85,7 @@ export default function TestimonialsSection() {
                     <span key={i} className="text-xs">★</span>
                   ))}
                 </div>
-                
+
                 {/* Quote */}
                 <p className="text-[#C4CDD8] font-body text-xs sm:text-sm leading-relaxed italic">
                   "{item.quote}"
