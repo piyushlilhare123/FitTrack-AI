@@ -85,7 +85,10 @@ FitTrack AI is a premium, full-stack, AI-powered personal fitness and wellness e
 └── README.md                    # Project documentation
 ```
 
+---
+
 🌐 **Live Website**: [fit-track-ai-three.vercel.app](https://fit-track-ai-three.vercel.app/)
+---
 ---
 ## ⚡ API Endpoints
 
