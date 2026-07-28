@@ -12,7 +12,7 @@ export default function Modal({ isOpen, onClose, children }) {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl bg-[#0F1928] border border-white/10 rounded-3xl p-6 shadow-2xl z-10 animate-fade-in">
+      <div className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0F1928] border border-white/10 rounded-3xl p-6 shadow-2xl z-10 animate-fade-in custom-scrollbar">
         {children}
       </div>
     </div>

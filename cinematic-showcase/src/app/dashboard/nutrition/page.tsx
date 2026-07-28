@@ -742,7 +742,7 @@ export default function Nutrition() {
           </div>
 
           {foodName && (
-            <div className="w-full h-52 rounded-xl overflow-hidden border border-white/10 relative bg-[#0F1928] shadow-lg">
+            <div className="w-full h-40 rounded-xl overflow-hidden border border-white/10 relative bg-[#0F1928] shadow-lg">
               {/* Using direct image search thumbnail for reliable real food photos */}
               <img 
                 src={`https://tse2.mm.bing.net/th?q=${encodeURIComponent(foodName + ' food meal')}&w=1200&h=800&c=7&rs=1&p=0&dpr=3&pid=1.7&mkt=en-US&adlt=moderate`}
