@@ -49,9 +49,9 @@ export default function WeeklyChart({ data }) {
           />
           <YAxis 
             domain={[100, 5000]}
-            ticks={[100, 1000, 2000, 3000, 4000, 5000]}
+            ticks={[100, 300, 500, 700, 900, 1000, 1500, 2000, 3000, 4000, 5000]}
             stroke="#94A3B8" 
-            fontSize={11} 
+            fontSize={10} 
             tickLine={false} 
             axisLine={false} 
             width={45}
