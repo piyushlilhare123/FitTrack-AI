@@ -42,6 +42,17 @@ if (process.env.GEMINI_NUTRITION_KEY) {
 }
 
 
+const getDayBounds = (dateInput) => {
+  const queryDate = dateInput ? new Date(dateInput) : new Date();
+  const startOfDay = new Date(queryDate);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(queryDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return { startOfDay, endOfDay, queryDate };
+};
+
 // Log a meal item
 exports.logMeal = async (req, res, next) => {
   try {
@@ -52,9 +63,7 @@ exports.logMeal = async (req, res, next) => {
       return next(new Error('Please provide meal name and calories'));
     }
 
-    const queryDate = date ? new Date(date) : new Date();
-    const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
+    const { startOfDay, endOfDay, queryDate } = getDayBounds(date);
 
     // Find if a nutrition log already exists for this day
     let log = await NutritionLog.findOne({
@@ -76,7 +85,7 @@ exports.logMeal = async (req, res, next) => {
         userId: req.user._id,
         meals: [mealItem],
         totalCalories: Number(calories),
-        date: date || new Date(),
+        date: queryDate,
       });
     } else {
       log.meals.push(mealItem);
@@ -96,9 +105,7 @@ exports.deleteMeal = async (req, res, next) => {
     const { mealId } = req.params;
     const { date } = req.query;
 
-    const queryDate = date ? new Date(date) : new Date();
-    const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
+    const { startOfDay, endOfDay } = getDayBounds(date);
 
     const log = await NutritionLog.findOne({
       userId: req.user._id,
@@ -124,9 +131,7 @@ exports.deleteMeal = async (req, res, next) => {
 exports.getTodayNutrition = async (req, res, next) => {
   try {
     const { date } = req.query;
-    const queryDate = date ? new Date(date) : new Date();
-    const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
+    const { startOfDay, endOfDay, queryDate } = getDayBounds(date);
 
     let log = await NutritionLog.findOne({
       userId: req.user._id,
@@ -268,9 +273,7 @@ exports.updateWater = async (req, res, next) => {
   try {
     const { waterGlasses, date } = req.body;
 
-    const queryDate = date ? new Date(date) : new Date();
-    const startOfDay = new Date(queryDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(queryDate.setHours(23, 59, 59, 999));
+    const { startOfDay, endOfDay, queryDate } = getDayBounds(date);
 
     let log = await NutritionLog.findOne({
       userId: req.user._id,
@@ -283,7 +286,7 @@ exports.updateWater = async (req, res, next) => {
         meals: [],
         totalCalories: 0,
         waterGlasses: Number(waterGlasses) || 0,
-        date: date || new Date(),
+        date: queryDate,
       });
     } else {
       log.waterGlasses = Number(waterGlasses) || 0;

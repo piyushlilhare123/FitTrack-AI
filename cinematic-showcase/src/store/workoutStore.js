@@ -86,7 +86,8 @@ export const useWorkoutStore = create((set, get) => ({
   fetchTodayNutrition: async (dateString) => {
     try {
       set({ isLoading: true });
-      const url = dateString ? `/api/nutrition/today?date=${dateString}` : '/api/nutrition/today';
+      const targetDate = dateString || new Date().toISOString();
+      const url = `/api/nutrition/today?date=${encodeURIComponent(targetDate)}`;
       const res = await api.get(url);
       set({ todayNutrition: res.data });
     } catch (err) {

@@ -273,10 +273,10 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Compute Stats
   const caloriesLimit = user?.caloriesLimit || 2000;
   const caloriesBurnedGoal = user?.caloriesBurnedGoal || 500;
-  const caloriesConsumed = todayNutrition?.totalCalories || 0;
+  const isNutritionFromToday = todayNutrition?.date && new Date(todayNutrition.date).toDateString() === new Date().toDateString();
+  const caloriesConsumed = isNutritionFromToday ? (todayNutrition?.totalCalories || 0) : 0;
   const caloriesRemaining = Math.max(0, caloriesLimit - caloriesConsumed);
   const consumptionPercent = Math.min(100, Math.round((caloriesConsumed / caloriesLimit) * 100));
 

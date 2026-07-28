@@ -156,8 +156,10 @@ export default function Progress() {
   // 2 & 3. Weekly Calories Consumed & Water Intake
   const allNutritionLogs = [...(nutritionHistory || [])];
   const todayStr = new Date().toDateString();
-  const todayIndex = allNutritionLogs.findIndex(l => new Date(l.date).toDateString() === todayStr);
-  if (todayNutrition) {
+  const isTodayValid = todayNutrition?.date && new Date(todayNutrition.date).toDateString() === todayStr;
+
+  if (isTodayValid) {
+    const todayIndex = allNutritionLogs.findIndex(l => new Date(l.date).toDateString() === todayStr);
     if (todayIndex > -1) {
       allNutritionLogs[todayIndex] = todayNutrition;
     } else {
