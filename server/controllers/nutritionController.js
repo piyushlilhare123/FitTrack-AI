@@ -43,14 +43,22 @@ if (process.env.GEMINI_NUTRITION_KEY) {
 
 
 const getDayBounds = (dateInput) => {
-  const queryDate = dateInput ? new Date(dateInput) : new Date();
-  const startOfDay = new Date(queryDate);
-  startOfDay.setHours(0, 0, 0, 0);
+  let dateStr;
+  if (!dateInput) {
+    const d = new Date();
+    dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  } else if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2}/)) {
+    dateStr = dateInput.substring(0, 10);
+  } else {
+    const d = new Date(dateInput);
+    dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
 
-  const endOfDay = new Date(queryDate);
-  endOfDay.setHours(23, 59, 59, 999);
+  const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
+  const endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
+  const queryDate = new Date(`${dateStr}T12:00:00.000Z`);
 
-  return { startOfDay, endOfDay, queryDate };
+  return { startOfDay, endOfDay, queryDate, dateStr };
 };
 
 // Log a meal item

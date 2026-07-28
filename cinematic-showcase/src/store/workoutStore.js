@@ -86,7 +86,9 @@ export const useWorkoutStore = create((set, get) => ({
   fetchTodayNutrition: async (dateString) => {
     try {
       set({ isLoading: true });
-      const targetDate = dateString || new Date().toISOString();
+      const d = new Date();
+      const defaultDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const targetDate = dateString || defaultDateStr;
       const url = `/api/nutrition/today?date=${encodeURIComponent(targetDate)}`;
       const res = await api.get(url);
       set({ todayNutrition: res.data });
@@ -112,7 +114,10 @@ export const useWorkoutStore = create((set, get) => ({
   logMeal: async (mealData) => {
     try {
       set({ isLoading: true });
-      const res = await api.post('/api/nutrition/log', mealData);
+      const d = new Date();
+      const defaultDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const payload = { ...mealData, date: mealData?.date || defaultDateStr };
+      const res = await api.post('/api/nutrition/log', payload);
       set({ todayNutrition: res.data });
       get().fetchNutritionHistory();
       return { success: true };
@@ -126,9 +131,10 @@ export const useWorkoutStore = create((set, get) => ({
   deleteMeal: async (mealId, dateString) => {
     try {
       set({ isLoading: true });
-      const url = dateString 
-        ? `/api/nutrition/log/${mealId}?date=${dateString}` 
-        : `/api/nutrition/log/${mealId}`;
+      const d = new Date();
+      const defaultDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const targetDate = dateString || defaultDateStr;
+      const url = `/api/nutrition/log/${mealId}?date=${encodeURIComponent(targetDate)}`;
       const res = await api.delete(url);
       set({ todayNutrition: res.data });
       get().fetchNutritionHistory();
@@ -143,7 +149,10 @@ export const useWorkoutStore = create((set, get) => ({
   updateWater: async (waterGlasses, dateString) => {
     try {
       set({ isLoading: true });
-      const payload = dateString ? { waterGlasses, date: dateString } : { waterGlasses };
+      const d = new Date();
+      const defaultDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const targetDate = dateString || defaultDateStr;
+      const payload = { waterGlasses, date: targetDate };
       const res = await api.put('/api/nutrition/water', payload);
       set({ todayNutrition: res.data });
       get().fetchNutritionHistory();
