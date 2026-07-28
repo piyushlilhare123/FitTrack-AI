@@ -390,7 +390,8 @@ Return ONLY a JSON object containing its estimated realistic nutritional data. N
 Schema:
 {
   "foodName": string (The clean name of the food),
-  "servingSize": string,
+  "servingSize": string (e.g. "1 bowl (200g)", "1 plate (250g)", "2 Dosa (180g)"),
+  "weightGrams": number (e.g. 250),
   "calories": number,
   "macros": { "carbs": number, "protein": number, "fat": number, "fiber": number },
   "micros": [
@@ -401,8 +402,9 @@ Schema:
   "insight": string (2 sentences, fitness-focused insight about eating this)
 }
 
-micros must include: Calcium, Iron, Vitamin C, Potassium, Sodium, Vitamin A, Magnesium, Zinc.
-All gram values should be realistic for the described serving. Return raw JSON only.`;
+Important Instructions:
+- "weightGrams" MUST be a realistic estimated weight in grams for the item/serving (e.g. 250 for a plate, 200 for a bowl, 180 for 2 slices). NEVER return single-digit numbers for weightGrams.
+- Always include all 8 micronutrients. Return raw JSON only.`;
 
     let textResponse = "{}";
     try {

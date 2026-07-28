@@ -38,12 +38,20 @@ export default function Nutrition() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFromSearch, setIsFromSearch] = useState(false);
   
-  // Custom Food Form fields
+  // Custom Food Form fields & Portion Scaler
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+
+  // Base portion weight and macro values for quantity scaling
+  const [baseWeight, setBaseWeight] = useState(250);
+  const [baseCalories, setBaseCalories] = useState(0);
+  const [baseProtein, setBaseProtein] = useState(0);
+  const [baseCarbs, setBaseCarbs] = useState(0);
+  const [baseFat, setBaseFat] = useState(0);
+  const [portionMultiplier, setPortionMultiplier] = useState(1.0);
 
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
@@ -85,9 +93,27 @@ export default function Nutrition() {
     return () => clearInterval(interval);
   }, []);
 
+  const applyScaledMacros = (mult: number, bCal: number, bProt: number, bCarb: number, bFat: number) => {
+    if (bCal > 0) setCalories(Math.round(bCal * mult).toString());
+    if (bProt >= 0) setProtein((Math.round(bProt * mult * 10) / 10).toString());
+    if (bCarb >= 0) setCarbs((Math.round(bCarb * mult * 10) / 10).toString());
+    if (bFat >= 0) setFat((Math.round(bFat * mult * 10) / 10).toString());
+  };
+
   const handleOpenAddModal = (type: string) => {
     setMealTypeToAdd(type);
     setIsFromSearch(false);
+    setFoodName('');
+    setCalories('');
+    setProtein('');
+    setCarbs('');
+    setFat('');
+    setBaseWeight(250);
+    setBaseCalories(0);
+    setBaseProtein(0);
+    setBaseCarbs(0);
+    setBaseFat(0);
+    setPortionMultiplier(1.0);
     setIsAddModalOpen(true);
   };
 
@@ -114,6 +140,12 @@ export default function Nutrition() {
       setProtein('');
       setCarbs('');
       setFat('');
+      setBaseWeight(250);
+      setBaseCalories(0);
+      setBaseProtein(0);
+      setBaseCarbs(0);
+      setBaseFat(0);
+      setPortionMultiplier(1.0);
       setIsAddModalOpen(false);
     } else {
       toast.error('Failed to log food.');
@@ -149,10 +181,28 @@ export default function Nutrition() {
       const data = await res.json();
       if (res.ok && data.success && data.nutritionData) {
         const food = data.nutritionData;
-        setCalories(food.calories?.toString() || '0');
-        setProtein(food.macros?.protein?.toString() || '0');
-        setCarbs(food.macros?.carbs?.toString() || '0');
-        setFat(food.macros?.fat?.toString() || '0');
+        const rawGramMatch = food.servingSize?.match(/(\d+)\s*g/i);
+        const parsedGramsFromServing = rawGramMatch ? parseInt(rawGramMatch[1], 10) : 0;
+        const bw = (food.weightGrams && food.weightGrams >= 20)
+          ? food.weightGrams
+          : (parsedGramsFromServing >= 20 ? parsedGramsFromServing : 250);
+
+        const bCal = Number(food.calories || 0);
+        const bProt = Number(food.macros?.protein || 0);
+        const bCarb = Number(food.macros?.carbs || 0);
+        const bFat = Number(food.macros?.fat || 0);
+
+        setBaseWeight(bw);
+        setBaseCalories(bCal);
+        setBaseProtein(bProt);
+        setBaseCarbs(bCarb);
+        setBaseFat(bFat);
+        setPortionMultiplier(1.0);
+
+        setCalories(bCal.toString());
+        setProtein(bProt.toString());
+        setCarbs(bCarb.toString());
+        setFat(bFat.toString());
         toast.success('Macros auto-filled by AI!', { id: 'detect' });
       } else {
         throw new Error(data.error || data.message || 'Failed to detect');
@@ -185,10 +235,29 @@ export default function Nutrition() {
       if (res.ok && data.success && data.nutritionData) {
         const food = data.nutritionData;
         setFoodName(food.foodName || searchQuery);
-        setCalories(food.calories?.toString() || '0');
-        setProtein(food.macros?.protein?.toString() || '0');
-        setCarbs(food.macros?.carbs?.toString() || '0');
-        setFat(food.macros?.fat?.toString() || '0');
+
+        const rawGramMatch = food.servingSize?.match(/(\d+)\s*g/i);
+        const parsedGramsFromServing = rawGramMatch ? parseInt(rawGramMatch[1], 10) : 0;
+        const bw = (food.weightGrams && food.weightGrams >= 20)
+          ? food.weightGrams
+          : (parsedGramsFromServing >= 20 ? parsedGramsFromServing : 250);
+
+        const bCal = Number(food.calories || 0);
+        const bProt = Number(food.macros?.protein || 0);
+        const bCarb = Number(food.macros?.carbs || 0);
+        const bFat = Number(food.macros?.fat || 0);
+
+        setBaseWeight(bw);
+        setBaseCalories(bCal);
+        setBaseProtein(bProt);
+        setBaseCarbs(bCarb);
+        setBaseFat(bFat);
+        setPortionMultiplier(1.0);
+
+        setCalories(bCal.toString());
+        setProtein(bProt.toString());
+        setCarbs(bCarb.toString());
+        setFat(bFat.toString());
         
         toast.success(`Found match: ${food.foodName || searchQuery}!`, { id: 'search' });
         setSearchQuery('');
@@ -204,6 +273,12 @@ export default function Nutrition() {
       // Fallback only if it's not a rate limit issue
       if (!err.message?.includes('limit')) {
         setFoodName(searchQuery);
+        setBaseWeight(250);
+        setBaseCalories(0);
+        setBaseProtein(0);
+        setBaseCarbs(0);
+        setBaseFat(0);
+        setPortionMultiplier(1.0);
         setIsFromSearch(true);
         setIsAddModalOpen(true);
       }
@@ -725,13 +800,106 @@ export default function Nutrition() {
               </div>
             )}
 
+            {/* Interactive Portion Quantity Scaler */}
+            <div className="p-3.5 rounded-xl bg-[#0F1928] border border-[#00F5FF]/30 space-y-3 font-sans">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-white">⚖️ Portion Quantity:</span>
+                  <div className="inline-flex items-center bg-white/5 border border-[#00F5FF]/80 rounded-lg px-2.5 py-1">
+                    <input
+                      type="number"
+                      min="10"
+                      max="5000"
+                      value={Math.round((baseWeight || 250) * portionMultiplier)}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) {
+                          const bw = baseWeight || 250;
+                          const mult = +(val / bw).toFixed(3);
+                          setPortionMultiplier(mult);
+                          applyScaledMacros(mult, baseCalories, baseProtein, baseCarbs, baseFat);
+                        }
+                      }}
+                      className="w-14 bg-transparent border-none text-[#00F5FF] text-sm font-extrabold font-mono text-right focus:outline-none"
+                    />
+                    <span className="text-xs font-bold text-[#00F5FF] ml-1">g</span>
+                  </div>
+                  <span className="text-[11px] text-mutedText">({portionMultiplier}x portion)</span>
+                </div>
+
+                <div className="flex gap-1.5">
+                  {[0.5, 1.0, 1.5, 2.0].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setPortionMultiplier(m);
+                        applyScaledMacros(m, baseCalories, baseProtein, baseCarbs, baseFat);
+                      }}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${
+                        portionMultiplier === m
+                          ? 'bg-[#00F5FF] text-black border-[#00F5FF]'
+                          : 'bg-white/5 text-white border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {m}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newMult = Math.max(0.25, +(portionMultiplier - 0.25).toFixed(2));
+                    setPortionMultiplier(newMult);
+                    applyScaledMacros(newMult, baseCalories, baseProtein, baseCarbs, baseFat);
+                  }}
+                  className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center hover:bg-white/10 cursor-pointer"
+                >
+                  -
+                </button>
+                <div className="flex-1 text-center">
+                  <input
+                    type="range"
+                    min="0.25"
+                    max="3.0"
+                    step="0.05"
+                    value={portionMultiplier}
+                    onChange={(e) => {
+                      const mult = parseFloat(e.target.value);
+                      setPortionMultiplier(mult);
+                      applyScaledMacros(mult, baseCalories, baseProtein, baseCarbs, baseFat);
+                    }}
+                    className="w-full accent-[#00F5FF] cursor-pointer"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newMult = +(portionMultiplier + 0.25).toFixed(2);
+                    setPortionMultiplier(newMult);
+                    applyScaledMacros(newMult, baseCalories, baseProtein, baseCarbs, baseFat);
+                  }}
+                  className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white font-bold text-base flex items-center justify-center hover:bg-white/10 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[9px] uppercase font-bold text-mutedText tracking-widest">Calories (kcal)</label>
                 <input
                   type="number"
                   value={calories}
-                  onChange={(e) => setCalories(e.target.value)}
+                  onChange={(e) => {
+                    setCalories(e.target.value);
+                    const val = Number(e.target.value) || 0;
+                    setBaseCalories(val / (portionMultiplier || 1));
+                  }}
                   placeholder="e.g. 120"
                   className="w-full bg-[#0F1928] border border-white/5 focus:border-cyan/30 rounded-xl py-3 px-4 text-xs text-white focus:outline-none"
                   required
@@ -742,7 +910,11 @@ export default function Nutrition() {
                 <input
                   type="number"
                   value={protein}
-                  onChange={(e) => setProtein(e.target.value)}
+                  onChange={(e) => {
+                    setProtein(e.target.value);
+                    const val = Number(e.target.value) || 0;
+                    setBaseProtein(val / (portionMultiplier || 1));
+                  }}
                   placeholder="e.g. 24"
                   className="w-full bg-[#0F1928] border border-white/5 focus:border-cyan/30 rounded-xl py-3 px-4 text-xs text-white focus:outline-none"
                 />
@@ -755,7 +927,11 @@ export default function Nutrition() {
                 <input
                   type="number"
                   value={carbs}
-                  onChange={(e) => setCarbs(e.target.value)}
+                  onChange={(e) => {
+                    setCarbs(e.target.value);
+                    const val = Number(e.target.value) || 0;
+                    setBaseCarbs(val / (portionMultiplier || 1));
+                  }}
                   placeholder="e.g. 3"
                   className="w-full bg-[#0F1928] border border-white/5 focus:border-cyan/30 rounded-xl py-3 px-4 text-xs text-white focus:outline-none"
                 />
@@ -765,7 +941,11 @@ export default function Nutrition() {
                 <input
                   type="number"
                   value={fat}
-                  onChange={(e) => setFat(e.target.value)}
+                  onChange={(e) => {
+                    setFat(e.target.value);
+                    const val = Number(e.target.value) || 0;
+                    setBaseFat(val / (portionMultiplier || 1));
+                  }}
                   placeholder="e.g. 1.5"
                   className="w-full bg-[#0F1928] border border-white/5 focus:border-cyan/30 rounded-xl py-3 px-4 text-xs text-white focus:outline-none"
                 />
