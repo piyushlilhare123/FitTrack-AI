@@ -48,12 +48,13 @@ export default function WeeklyChart({ data }) {
             dy={8}
           />
           <YAxis 
+            domain={[100, 5000]}
+            ticks={[100, 1000, 2000, 3000, 4000, 5000]}
             stroke="#94A3B8" 
             fontSize={11} 
             tickLine={false} 
             axisLine={false} 
-            tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
-            width={40}
+            width={45}
           />
           <Tooltip
             contentStyle={{
