@@ -582,20 +582,31 @@ export default function Dashboard() {
     for (let i = 0; i < 6; i++) {
       const targetDate = new Date(startOfWeek);
       targetDate.setDate(startOfWeek.getDate() + i);
-      const dateStr = targetDate.toDateString();
+      const targetDateStr = targetDate.toDateString();
+      const targetYYYYMMDD = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
       
       // Calculate burned calories for this day
       const burnedToday = workouts
-        .filter((w: any) => w.isCompleted && w.date && new Date(w.date).toDateString() === dateStr)
+        .filter((w: any) => {
+          if (!w.isCompleted || !w.date) return false;
+          const wDate = new Date(w.date);
+          const wYYYYMMDD = `${wDate.getFullYear()}-${String(wDate.getMonth() + 1).padStart(2, '0')}-${String(wDate.getDate()).padStart(2, '0')}`;
+          return wDate.toDateString() === targetDateStr || wYYYYMMDD === targetYYYYMMDD;
+        })
         .reduce((sum: number, w: any) => sum + (w.totalCalories || 0), 0);
         
       // Calculate consumed calories for this day
       let consumedToday = 0;
-      if (dateStr === new Date().toDateString()) {
-        consumedToday = todayNutrition?.totalCalories || 0;
+      if (targetDateStr === new Date().toDateString()) {
+        consumedToday = (todayNutrition?.date && (new Date(todayNutrition.date).toDateString() === targetDateStr || String(todayNutrition.date).startsWith(targetYYYYMMDD))) ? (todayNutrition?.totalCalories || 0) : 0;
       } else {
-        const histLog = nutritionHistory.find((n: any) => n.date && new Date(n.date).toDateString() === dateStr);
-        consumedToday = histLog ? histLog.totalCalories : 0;
+        const histLog = nutritionHistory.find((n: any) => {
+          if (!n.date) return false;
+          const nDate = new Date(n.date);
+          const nYYYYMMDD = `${nDate.getFullYear()}-${String(nDate.getMonth() + 1).padStart(2, '0')}-${String(nDate.getDate()).padStart(2, '0')}`;
+          return nDate.toDateString() === targetDateStr || nYYYYMMDD === targetYYYYMMDD;
+        });
+        consumedToday = histLog ? (histLog.totalCalories || 0) : 0;
       }
       
       data.push({
