@@ -324,16 +324,22 @@ export default function Nutrition() {
     }
   };
 
-  // Group meals by type
+  // Check if todayNutrition date matches client local date
+  const isNutritionFromToday = todayNutrition?.date && new Date(todayNutrition.date).toDateString() === new Date().toDateString();
+  const activeMeals = isNutritionFromToday ? (todayNutrition?.meals || []) : [];
+  const activeTotalCalories = isNutritionFromToday ? (todayNutrition?.totalCalories || 0) : 0;
+  const activeWaterGlasses = isNutritionFromToday ? (todayNutrition?.waterGlasses || 0) : 0;
+
+  // Group meals by type (automatically resets to 0 when day changes)
   const mealSections = ['breakfast', 'lunch', 'dinner', 'snack'];
   const groupedMeals: { [key: string]: any[] } = mealSections.reduce((acc: any, type) => {
-    acc[type] = todayNutrition?.meals?.filter((m: any) => m.type === type) || [];
+    acc[type] = activeMeals.filter((m: any) => m.type === type);
     return acc;
   }, {});
 
-  const totalProtein = todayNutrition?.meals?.reduce((sum: number, m: any) => sum + (m.protein || 0), 0) || 0;
-  const totalCarbs = todayNutrition?.meals?.reduce((sum: number, m: any) => sum + (m.carbs || 0), 0) || 0;
-  const totalFat = todayNutrition?.meals?.reduce((sum: number, m: any) => sum + (m.fat || 0), 0) || 0;
+  const totalProtein = activeMeals.reduce((sum: number, m: any) => sum + (m.protein || 0), 0);
+  const totalCarbs = activeMeals.reduce((sum: number, m: any) => sum + (m.carbs || 0), 0);
+  const totalFat = activeMeals.reduce((sum: number, m: any) => sum + (m.fat || 0), 0);
 
   // Filter nutrition history to only show the last 7 days dynamically
   const getRecentHistory = () => {
@@ -495,7 +501,7 @@ export default function Nutrition() {
               <div className="mt-6 text-center space-y-1 w-full">
                 <span className="text-[10px] uppercase font-bold text-mutedText tracking-wider">Total Deficit Target</span>
                 <p className="text-xl font-mono font-extrabold text-white">
-                  {todayNutrition?.totalCalories || 0} / {user?.caloriesLimit || 2000} <span className="text-xs font-sans font-normal text-mutedText">kcal</span>
+                  {activeTotalCalories} / {user?.caloriesLimit || 2000} <span className="text-xs font-sans font-normal text-mutedText">kcal</span>
                 </p>
               </div>
               
@@ -594,16 +600,16 @@ export default function Nutrition() {
             <div className="flex items-center justify-between">
               <div className="flex gap-1 flex-wrap max-w-[200px]">
                 {[...Array(user?.waterTarget || 8)].map((_, i) => {
-                  const isFilled = i < (todayNutrition?.waterGlasses || 0);
+                  const isFilled = i < activeWaterGlasses;
                   return (
                     <div key={i} className={`w-5 h-8 rounded-b-md rounded-t-sm border ${isFilled ? 'bg-blue-500 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-white/5 border-white/10'} transition-all duration-300`}></div>
                   );
                 })}
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => updateWater(Math.max(0, (todayNutrition?.waterGlasses || 0) - 1))} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all">-</button>
-                <span className="text-sm font-mono font-bold w-4 text-center">{todayNutrition?.waterGlasses || 0}</span>
-                <button onClick={() => updateWater((todayNutrition?.waterGlasses || 0) + 1)} className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 flex items-center justify-center transition-all">+</button>
+                <button onClick={() => updateWater(Math.max(0, activeWaterGlasses - 1))} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all">-</button>
+                <span className="text-sm font-mono font-bold w-4 text-center">{activeWaterGlasses}</span>
+                <button onClick={() => updateWater(activeWaterGlasses + 1)} className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 flex items-center justify-center transition-all">+</button>
               </div>
             </div>
           </Card>
