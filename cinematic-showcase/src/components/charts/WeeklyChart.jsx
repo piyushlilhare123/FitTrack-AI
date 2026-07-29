@@ -26,7 +26,7 @@ export default function WeeklyChart({ data }) {
   return (
     <div className="w-full min-w-0 h-64 sm:h-72 font-sans">
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 15, left: -5, bottom: 5 }}>
           <defs>
             {/* Volumetric 3D glowing gradients */}
             <linearGradient id="colorConsumed" x1="0" y1="0" x2="0" y2="1">

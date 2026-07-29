@@ -9,7 +9,7 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
     ? [
         { name: 'Protein', value: protein, color: '#00F5FF' }, // Cyan
         { name: 'Carbs', value: carbs, color: '#39FF14' }, // Green
-        { name: 'Fat', value: fat, color: '#8892A4' }, // Muted
+        { name: 'Fat', value: fat, color: '#FFD700' }, // Vibrant Gold / Yellow
       ]
     : [
         { name: 'No log today', value: 100, color: 'rgba(255, 255, 255, 0.05)' }
@@ -63,7 +63,7 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
 
       {/* Custom Legend */}
       {hasData && (
-        <div className="grid grid-cols-3 gap-4 mt-4 text-center w-full max-w-xs">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 text-center w-full max-w-xs">
           <div className="space-y-0.5">
             <p className="text-[10px] font-bold text-accentCyan uppercase tracking-widest">Protein</p>
             <p className="text-sm font-mono font-extrabold text-white">{protein}g</p>
@@ -75,7 +75,7 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
             <p className="text-[10px] text-mutedText">{calculatePct(carbs)}%</p>
           </div>
           <div className="space-y-0.5">
-            <p className="text-[10px] font-bold text-mutedText uppercase tracking-widest">Fat</p>
+            <p className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest">Fat</p>
             <p className="text-sm font-mono font-extrabold text-white">{fat}g</p>
             <p className="text-[10px] text-mutedText">{calculatePct(fat)}%</p>
           </div>

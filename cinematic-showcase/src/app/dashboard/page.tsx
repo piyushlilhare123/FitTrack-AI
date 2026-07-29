@@ -668,9 +668,9 @@ export default function Dashboard() {
 
         <div className="relative z-10 space-y-4">
           <div className="space-y-1">
-            <span className="text-xs font-bold text-white/70 uppercase tracking-widest">Welcome back</span>
+            <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Welcome back</span>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-white break-words leading-tight">
-              Hi there! 👋 <span className="bg-gradient-to-r from-white to-[#C4CDD8] bg-clip-text text-transparent break-words inline">{user?.name || 'piyushlilhare'}</span>
+              Hi there! 👋 <span className="text-[#39FF14] font-black drop-shadow-[0_0_12px_rgba(57,255,20,0.4)] break-words inline">{user?.name || 'piyushlilhare'}</span>
             </h2>
           </div>
 
@@ -1262,8 +1262,10 @@ export default function Dashboard() {
               Goal hit 3 weeks in a row
             </span>
           </div>
-          <div className="w-full min-w-0">
-            <WeeklyChart data={weeklyChartData} />
+          <div className="w-full min-w-0 overflow-x-auto custom-scrollbar pb-1">
+            <div className="min-w-[380px] sm:min-w-full">
+              <WeeklyChart data={weeklyChartData} />
+            </div>
           </div>
         </Card>
       </div>

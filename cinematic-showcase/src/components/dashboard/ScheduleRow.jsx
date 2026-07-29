@@ -38,49 +38,49 @@ export default function ScheduleRow({ time, name, duration, status, onClick, onT
     <div 
       onClick={onClick}
       className={clsx(
-        "w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer select-none",
+        "w-full flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-xl border transition-all duration-200 cursor-pointer select-none gap-3 sm:gap-4",
         status === 'in-progress' || status === 'In Progress'
-          ? "bg-[#0F1928] border-accentCyan/20 shadow-neonCyan hover:border-accentCyan/45 hover:scale-[1.01]"
-          : "bg-white/[0.01] border-white/5 hover:bg-[#0E1521] hover:border-cyan/20 hover:scale-[1.01]"
+          ? "bg-[#0F1928] border-accentCyan/30 shadow-neonCyan hover:border-accentCyan/50"
+          : "bg-[#0F1928]/60 border-white/10 hover:bg-[#0E1521] hover:border-cyan/30"
       )}
     >
       {/* Left: Time and Exercise info */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
         {/* Status Checkbox Button */}
         <div 
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
           }}
-          className="flex-shrink-0 hover:scale-110 transition-transform cursor-pointer"
+          className="flex-shrink-0 mt-0.5 sm:mt-0 hover:scale-110 transition-transform cursor-pointer"
         >
           {getStatusIcon()}
         </div>
 
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-mono font-bold text-mutedText bg-white/[0.03] px-2 py-0.5 rounded border border-white/5">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-mono font-bold text-white bg-white/10 px-2 py-0.5 rounded border border-white/10">
               {time}
             </span>
             {isAI && (
-              <span className="text-[9px] font-bold text-accentCyan bg-accentCyan/15 px-1.5 py-0.5 rounded flex items-center gap-0.5 uppercase tracking-wider">
+              <span className="text-[9px] font-bold text-accentCyan bg-accentCyan/20 border border-accentCyan/30 px-1.5 py-0.5 rounded flex items-center gap-0.5 uppercase tracking-wider">
                 <Sparkles className="w-2.5 h-2.5" /> AI Plan
               </span>
             )}
             {goal && (
-              <span className="text-[8px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+              <span className="text-[8px] font-bold text-orange-300 bg-orange-500/20 border border-orange-500/30 px-1.5 py-0.5 rounded uppercase tracking-wider">
                 {formatGoal(goal)}
               </span>
             )}
             {fitnessLevel && (
-              <span className="text-[8px] font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+              <span className="text-[8px] font-bold text-purple-300 bg-purple-500/20 border border-purple-500/30 px-1.5 py-0.5 rounded uppercase tracking-wider">
                 {fitnessLevel}
               </span>
             )}
           </div>
           <p className={clsx(
-            "text-sm font-semibold mt-1",
-            status === 'completed' || status === 'Done' ? "text-mutedText line-through" : "text-white"
+            "text-xs sm:text-sm font-bold leading-tight break-words",
+            status === 'completed' || status === 'Done' ? "text-white/50 line-through" : "text-white"
           )}>
             {name}
           </p>
@@ -88,8 +88,8 @@ export default function ScheduleRow({ time, name, duration, status, onClick, onT
       </div>
 
       {/* Right: Duration & Status tag */}
-      <div className="flex items-center space-x-4">
-        <span className="text-xs font-mono font-medium text-mutedText">
+      <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 flex-shrink-0">
+        <span className="text-xs font-mono font-bold text-cyan">
           {duration} min
         </span>
         <span className={clsx(
