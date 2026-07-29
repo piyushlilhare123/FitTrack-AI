@@ -24,9 +24,9 @@ export default function WeeklyChart({ data }) {
   ];
 
   return (
-    <div className="w-full h-72 font-sans">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 15, bottom: 5 }}>
+    <div className="w-full min-w-0 h-64 sm:h-72 font-sans">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
           <defs>
             {/* Volumetric 3D glowing gradients */}
             <linearGradient id="colorConsumed" x1="0" y1="0" x2="0" y2="1">
@@ -42,7 +42,7 @@ export default function WeeklyChart({ data }) {
           <XAxis 
             dataKey="day" 
             stroke="#94A3B8" 
-            fontSize={11} 
+            fontSize={10} 
             tickLine={false} 
             axisLine={false} 
             dy={8}
@@ -51,10 +51,10 @@ export default function WeeklyChart({ data }) {
             domain={[100, 5000]}
             ticks={[100, 300, 500, 700, 900, 1000, 1500, 2000, 3000, 4000, 5000]}
             stroke="#94A3B8" 
-            fontSize={10} 
+            fontSize={9} 
             tickLine={false} 
             axisLine={false} 
-            width={45}
+            width={38}
           />
           <Tooltip
             contentStyle={{

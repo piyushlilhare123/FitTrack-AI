@@ -23,16 +23,16 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative w-44 h-44">
-        <ResponsiveContainer width="100%" height="100%">
+    <div className="flex flex-col items-center justify-center w-full min-w-0 py-2">
+      <div className="relative w-40 h-40 sm:w-44 sm:h-44 min-w-0">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={55}
-              outerRadius={70}
+              innerRadius={50}
+              outerRadius={65}
               paddingAngle={4}
               dataKey="value"
             >
@@ -43,11 +43,12 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
             {hasData && (
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(15, 25, 40, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'rgba(15, 25, 40, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '12px',
                   fontSize: '11px',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
+                  zIndex: 50
                 }}
               />
             )}
@@ -55,8 +56,8 @@ export default function MacroRing({ protein = 0, carbs = 0, fat = 0 }) {
         </ResponsiveContainer>
         {/* Center Text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[10px] uppercase font-bold text-mutedText tracking-wider">Total Macros</span>
-          <span className="text-xl font-mono font-bold text-white">{totalGrams}g</span>
+          <span className="text-[9px] sm:text-[10px] uppercase font-bold text-mutedText tracking-wider">Total Macros</span>
+          <span className="text-lg sm:text-xl font-mono font-bold text-white">{totalGrams}g</span>
         </div>
       </div>
 

@@ -662,22 +662,22 @@ export default function Dashboard() {
     <div className="space-y-8 pb-28 md:pb-12 select-none">
       
       {/* Welcome green/teal banner matching design reference */}
-      <div className="rounded-3xl p-8 bg-gradient-to-r from-[#038356] to-[#0A4B3A] border border-white/5 shadow-2xl relative overflow-hidden">
+      <div className="rounded-3xl p-5 sm:p-8 bg-gradient-to-r from-[#038356] to-[#0A4B3A] border border-white/5 shadow-2xl relative overflow-hidden">
         {/* Abstract blur */}
         <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-cyan/20 blur-[50px] rounded-full pointer-events-none"></div>
 
         <div className="relative z-10 space-y-4">
           <div className="space-y-1">
             <span className="text-xs font-bold text-white/70 uppercase tracking-widest">Welcome back</span>
-            <h2 className="text-3xl font-display font-extrabold text-white">
-              Hi there! 👋 <span className="bg-gradient-to-r from-white to-[#C4CDD8] bg-clip-text text-transparent">{user?.name || 'piyushlilhare'}</span>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-white break-words leading-tight">
+              Hi there! 👋 <span className="bg-gradient-to-r from-white to-[#C4CDD8] bg-clip-text text-transparent break-words inline">{user?.name || 'piyushlilhare'}</span>
             </h2>
           </div>
 
           {/* Motivational quote block inside banner */}
-          <div className="inline-flex items-center space-x-2.5 px-4 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white text-xs font-semibold">
-            <Rocket className="w-4 h-4 text-actionGreen animate-bounce" />
-            <span>{user?.bio || "Every step counts. You've got this!"}</span>
+          <div className="inline-flex items-center space-x-2.5 px-3.5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white text-xs font-semibold max-w-full">
+            <Rocket className="w-4 h-4 text-actionGreen animate-bounce flex-shrink-0" />
+            <span className="truncate">{user?.bio || "Every step counts. You've got this!"}</span>
           </div>
         </div>
       </div>
@@ -1251,9 +1251,9 @@ export default function Dashboard() {
       </Card>
 
       {/* Row 4: Weekly Progress Chart (Coach Widget removed) */}
-      <div className="w-full">
-        <Card className="space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="w-full min-w-0">
+        <Card className="space-y-6 p-4 sm:p-6 min-w-0 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">Weekly Calorie Deficit</h3>
               <p className="text-[10px] text-mutedText mt-0.5">Calories burned from completed activities</p>
@@ -1262,24 +1262,28 @@ export default function Dashboard() {
               Goal hit 3 weeks in a row
             </span>
           </div>
-          <WeeklyChart data={weeklyChartData} />
+          <div className="w-full min-w-0">
+            <WeeklyChart data={weeklyChartData} />
+          </div>
         </Card>
       </div>
 
       {/* Row 5: Split (50/50) - Nutrition Summary ring chart & Recent Achievements */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 min-w-0">
         
         {/* Left: Nutrition Summary Ring Chart */}
-        <Card className="space-y-6">
+        <Card className="space-y-6 p-4 sm:p-6 min-w-0 overflow-hidden">
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Macros Breakdown</h3>
             <p className="text-[10px] text-mutedText mt-0.5">Calculated protein, carbs, and fat target percentages</p>
           </div>
-          <MacroRing protein={protein} carbs={carbs} fat={fat} />
+          <div className="w-full min-w-0">
+            <MacroRing protein={protein} carbs={carbs} fat={fat} />
+          </div>
         </Card>
 
         {/* Right: Recent Achievements */}
-        <Card className="space-y-4">
+        <Card className="space-y-4 p-4 sm:p-6 min-w-0 overflow-hidden">
           <div className="border-b border-white/5 pb-3">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recent Achievements</h3>
             <p className="text-[10px] text-mutedText mt-0.5">Activity records, milestones, and challenges hit</p>
@@ -1287,9 +1291,9 @@ export default function Dashboard() {
 
           <div className="space-y-3.5 pt-2">
             {getDynamicAchievements(activeStreak).map((ach, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] border border-white/5">
-                <span className="text-xs font-semibold text-white">{ach.text}</span>
-                <span className="text-[9px] font-mono text-mutedText">{ach.time}</span>
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.01] border border-white/5 gap-2">
+                <span className="text-xs font-semibold text-white break-words flex-1">{ach.text}</span>
+                <span className="text-[9px] font-mono text-mutedText flex-shrink-0">{ach.time}</span>
               </div>
             ))}
           </div>
