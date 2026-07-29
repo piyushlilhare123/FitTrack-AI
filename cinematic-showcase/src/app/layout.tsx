@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+// Trigger Vercel rebuild for cinematic-showcase
 
 export const metadata: Metadata = {
   title: "FitTrack — Build habits that actually stick.",
